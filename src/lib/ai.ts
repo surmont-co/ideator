@@ -7,7 +7,7 @@ const systemPrompt = (maxWords: number, maxChars?: number) => {
     const charConstraint = maxChars ? ` and at most ${maxChars} characters` : "";
     return [
         `You are summarizing a project or proposal.`,
-        `Always respond in the "${defaultLocale}" language (target locale), regardless of the source language.`,
+        `Respond ONLY in the "${defaultLocale}" language (translate if needed), using correct diacritics for that locale.`,
         `Assume the reader already sees the project title separately; do not repeat or rephrase the title or proper names unless essential to meaning.`,
         `Write a single crisp sentence with no bullets or headings, removing redundancy and filler.`,
         `Keep it easy to read and remember.`,

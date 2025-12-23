@@ -1,30 +1,35 @@
 # Ideator
 
-Next.js App Router project for democratic prioritization of proposals with AI-assisted summaries, i18n (EN/RO), and WorkOS auth.
+Platformă Next.js (App Router) pentru inițiative de echipă: proiecte, propuneri, voturi și discuții, cu sumarizare AI (Gemini), i18n (EN/RO) și autentificare WorkOS.
 
-## Quickstart
-1) Install deps: `npm install`
-2) Env vars: copy `.env.local` and fill:
-   - `WORKOS_CLIENT_ID`, `WORKOS_SECRET_KEY`, `WORKOS_API_KEY`, `WORKOS_REDIRECT_URI`, `WORKOS_COOKIE_PASSWORD`
-   - `DATABASE_URL` (defaults to `database.sqlite`)
-   - `GEMINI_API_KEY` (required for AI summaries)
-   - `LOCALE` (`en` or `ro`, default `en`)
-3) DB: run the SQL migrations in `drizzle/` (`0000_*.sql`, `0001_add_summaries.sql`, `0002_add_users_table_and_links.sql`, `0003_add_author_columns.sql`) against your SQLite file. Example: `sqlite3 database.sqlite < drizzle/0000_flippant_zemo.sql` then apply the subsequent files in order.
-4) Dev server: `npm run dev` (http://localhost:3000)
+## Ce face
+- Creezi proiecte cu termene și descrieri; sumarul se generează automat (sau fallback la descriere).
+- Adaugi propuneri pe proiecte, fiecare cu sumar AI în timp real și vot inițial.
+- Detector de similitudine: în timpul completării, sunt semnalate propuneri existente similare și poți vota direct din modal.
+- Voturi și discuții pe propuneri; titluri/descrieri în Markdown.
+- Interfață localizată EN/RO; formate de dată și sumar AI țin cont de `LOCALE`.
+
+## Setup rapid
+1) Instalează dependențe: `npm install`
+2) Configurează `.env.local` (copie din exemplu dacă există):
+   - WorkOS: `WORKOS_CLIENT_ID`, `WORKOS_SECRET_KEY`, `WORKOS_API_KEY`, `WORKOS_REDIRECT_URI`, `WORKOS_COOKIE_PASSWORD`
+   - Bază de date: `DATABASE_URL` (implicit `database.sqlite`)
+   - AI: `GEMINI_API_KEY` (obligatoriu pentru sumarizare)
+   - Locale: `LOCALE` (`en` sau `ro`, default `en`)
+3) Bază de date (SQLite):
+   - Rulează migrările din `drizzle/` în ordine (`0000_*.sql`, `0001_add_summaries.sql`, `0002_add_users_table_and_links.sql`, `0003_add_author_columns.sql`, `0004_full_schema.sql` dacă o folosești).
+   - Exemplu: `sqlite3 database.sqlite < drizzle/0000_flippant_zemo.sql` apoi celelalte în ordine.
+4) Pornește dev server: `npm run dev` (http://localhost:3000)
 5) Lint: `npm run lint`
 
-## Features
-- WorkOS authentication protects all app routes.
-- EN/RO translations with header dropdown locale selector; default from `LOCALE` or cookie.
-- AI summaries via Gemini for projects/proposals (fallback to trimmed description if unavailable).
-- User records stored in `users` table; projects/proposals/comments reference user_id and legacy author fields.
-- Dashboard cards are fully clickable to project details; proposals support Markdown titles/descriptions and localized UI copy.
-- Discussion sheet with hover timestamps and accessible overlay.
-
-## Testing
+## Comenzi utile
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Start producție: `npm run start`
 - Lint: `npm run lint`
-- Playwright (if configured locally): `npx playwright test`
+- (Opțional) E2E: `npx playwright test`
 
-## Deployment Notes
-- Ensure `.env.local` is present in the runtime with Gemini and WorkOS keys.
-- Apply Drizzle SQL migrations to your target database before starting the server.
+## Note de deploy
+- Asigură `.env.local` cu cheile WorkOS și Gemini pe mediu.
+- Aplică migrările SQL pe baza țintă înainte de rulare.
+- Setează `LOCALE` pentru limba implicită a UI și a sumarizării AI.

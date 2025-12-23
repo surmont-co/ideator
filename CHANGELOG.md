@@ -11,6 +11,9 @@
 - Project proposal form now performs live similarity checks (Jaccard, 75% threshold) against existing proposals on the same project, gating submission with a confirmation modal that lists close matches.
 - Proposal summaries are generated asynchronously while typing and submitted with the form; submit is disabled during background checks/summarization.
 - Project details now pass existing proposals to the form, and summary toggles retain glow state per page load; deadline formatting respects locale (RO/EN) with proper month casing/diacritics.
+- Similarity modal now lets users upvote/downvote existing proposals directly; vote buttons match proposal footer styling and close the modal after casting.
+- AI summary prompts enforce the `LOCALE` language (with diacritics) for proposal summaries.
+- README rewritten for clarity on purpose, setup, and commands.
 
 ### Changed
 - Dashboard, project details, and proposal lists now prefer AI summaries over full descriptions.

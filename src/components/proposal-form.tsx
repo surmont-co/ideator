@@ -10,12 +10,14 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 import * as React from "react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { castVote } from "@/app/actions/proposals";
 
 type ExistingProposal = {
     id: string;
     title: string;
     description: string | null;
     summary: string | null;
+    userVote?: number | null;
 };
 
 type SimilarMatch = {
@@ -25,7 +27,7 @@ type SimilarMatch = {
     reason: string;
 };
 
-const SIMILARITY_THRESHOLD = 0.75;
+const SIMILARITY_THRESHOLD = 0.4;
 const SUMMARY_MAX_CHARS = 200;
 
 function normalize(text: string) {
@@ -51,6 +53,42 @@ function jaccardScore(tokensA: string[], tokensB: string[]) {
     return intersection.length / union.size;
 }
 
+function trigrams(text: string) {
+    const cleaned = normalize(text).replace(/\s+/g, " ").trim();
+    const grams: string[] = [];
+    for (let i = 0; i < cleaned.length - 2; i += 1) {
+        grams.push(cleaned.slice(i, i + 3));
+    }
+    return grams;
+}
+
+function diceCoefficient(a: string[], b: string[]) {
+    if (a.length === 0 || b.length === 0) return 0;
+    const setB = new Set(b);
+    const intersection = a.filter((g) => setB.has(g)).length;
+    return (2 * intersection) / (a.length + b.length);
+}
+
+function overlapRatio(a: string, b: string) {
+    if (!a || !b) return 0;
+    if (a.includes(b)) return b.length / Math.max(a.length, b.length);
+    if (b.includes(a)) return a.length / Math.max(a.length, b.length);
+    return 0;
+}
+
+function tokenSimilarityScore(tokensA: string[], tokensB: string[]) {
+    if (tokensA.length === 0 || tokensB.length === 0) return 0;
+    const bestMatches = tokensA.map((tokenA) => {
+        let best = 0;
+        for (const tokenB of tokensB) {
+            const ratio = overlapRatio(tokenA, tokenB);
+            if (ratio > best) best = ratio;
+        }
+        return best;
+    });
+    return bestMatches.reduce((sum, v) => sum + v, 0) / tokensA.length;
+}
+
 export function ProposalForm({
     projectId,
     locale,
@@ -70,14 +108,16 @@ export function ProposalForm({
     const [showSimilarModal, setShowSimilarModal] = useState(false);
     const [bypassSimilarity, setBypassSimilarity] = useState(false);
     const [isCheckingSimilarity, setIsCheckingSimilarity] = useState(false);
+    const [isVotingSimilar, setIsVotingSimilar] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
     const { t } = getTranslations(locale);
 
     const existingTokens = useMemo(() => {
         return existingProposals.map((p) => {
-            const text = `${p.title} ${p.description || p.summary || ""}`;
+            const text = `${p.title} ${p.description || ""} ${p.summary || ""}`;
             const tokens = tokenize(text);
-            return { ...p, tokens };
+            const grams = trigrams(text);
+            return { ...p, tokens, grams, fullText: text };
         });
     }, [existingProposals]);
 
@@ -106,15 +146,27 @@ export function ProposalForm({
         setIsCheckingSimilarity(true);
         const timer = window.setTimeout(() => {
             const tokens = tokenize(inputText);
+            const grams = trigrams(inputText);
             const candidates = existingTokens
                 .map((p) => {
-                    const score = jaccardScore(tokens, p.tokens);
-                    const shared = [...new Set(tokens.filter((t) => p.tokens.includes(t)))].slice(0, 6);
+                    const tokenScore = jaccardScore(tokens, p.tokens);
+                    const gramScore = diceCoefficient(grams, p.grams);
+                    const fuzzyTokenScore = tokenSimilarityScore(tokens, p.tokens);
+                    const score = Math.max(tokenScore, gramScore, fuzzyTokenScore);
+                    const sharedTokens = [...new Set(tokens.filter((t) => p.tokens.includes(t)))].slice(0, 6);
+                    const reason =
+                        sharedTokens.length > 0
+                            ? `Cuvinte comune: ${sharedTokens.join(", ")}`
+                            : fuzzyTokenScore >= SIMILARITY_THRESHOLD
+                                ? "Conținut foarte similar"
+                                : gramScore >= SIMILARITY_THRESHOLD
+                                    ? "Formulare similară"
+                                    : "";
                     return {
                         id: p.id,
                         title: p.title,
                         score,
-                        reason: shared.length > 0 ? `Cuvinte comune: ${shared.join(", ")}` : "",
+                        reason,
                     };
                 })
                 .filter((c) => c.score >= SIMILARITY_THRESHOLD)
@@ -174,6 +226,17 @@ export function ProposalForm({
         setShowSimilarModal(false);
         setBypassSimilarity(true);
         formRef.current?.requestSubmit();
+    };
+
+    const handleVoteSimilar = async (proposalId: string, value: number) => {
+        if (isVotingSimilar) return;
+        try {
+            setIsVotingSimilar(true);
+            await castVote(proposalId, value, projectId);
+            setShowSimilarModal(false);
+        } finally {
+            setIsVotingSimilar(false);
+        }
     };
 
     const disableSubmit = isPending || isSummarizing || isCheckingSimilarity;
@@ -257,11 +320,45 @@ export function ProposalForm({
                                 </div>
                                 <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2">
                                     {similarMatches.map((match) => (
-                                        <div key={match.id} className="rounded-lg border border-border/70 bg-muted/40 p-3 space-y-1">
-                                            <div className="font-semibold text-sm">{match.title}</div>
-                                            {match.reason && (
-                                                <div className="text-sm text-muted-foreground">{match.reason}</div>
+                                        <div
+                                            key={match.id}
+                                            className={cn(
+                                                "group rounded-lg border border-border/70 bg-muted/40 p-3 transition hover:border-primary/60 hover:bg-primary/5",
+                                                isVotingSimilar && "opacity-70",
                                             )}
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="space-y-1">
+                                                    <div className="font-semibold text-sm">{match.title}</div>
+                                                    {match.reason && (
+                                                        <div className="text-sm text-muted-foreground">{match.reason}</div>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => handleVoteSimilar(match.id, 1)}
+                                                        disabled={isVotingSimilar}
+                                                        className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                    >
+                                                        <ThumbsUp className="w-4 h-4" />
+                                                        {t("proposalForm.upvote")}
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => handleVoteSimilar(match.id, -1)}
+                                                        disabled={isVotingSimilar}
+                                                        className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                    >
+                                                        <ThumbsDown className="w-4 h-4" />
+                                                        {t("proposalForm.downvote")}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
