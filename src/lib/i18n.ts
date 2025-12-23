@@ -41,6 +41,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.submitAnyway": "Submit my proposal anyway",
         "proposalForm.cancel": "Cancel",
         "proposalForm.summaryPreview": "Preview of your proposal summary",
+        "proposalForm.checkingSimilarity": "Checking for similar proposals...",
+        "proposalForm.analyzing": "Analyzing...",
 
         "proposalList.noDescription": "No description.",
         "proposalList.comments": "Comments",
@@ -82,6 +84,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.submitAnyway": "Adaugă totuși propunerea mea",
         "proposalForm.cancel": "Renunță",
         "proposalForm.summaryPreview": "Rezumatul propunerii tale",
+        "proposalForm.checkingSimilarity": "Verificăm propunerile similare...",
+        "proposalForm.analyzing": "Analizăm...",
 
         "proposalList.noDescription": "Fără descriere.",
         "proposalList.comments": "Comentarii",

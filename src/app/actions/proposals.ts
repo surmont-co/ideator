@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { proposals, votes, users } from "@/db/schema";
 import { getUser } from "@/lib/auth";
 import { z } from "zod";
-import { fallbackSummary } from "@/lib/ai";
+import { buildProposalSummary } from "@/lib/proposal-summary";
 
 type ProposalActionState = {
     error?: string;
@@ -18,7 +18,6 @@ const createProposalSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
     description: z.string().optional(),
     initialVote: z.enum(["1", "-1"]),
-    summary: z.string().optional(),
 });
 
 export async function createProposal(prevState: ProposalActionState | null, formData: FormData): Promise<ProposalActionState> {
@@ -42,10 +41,13 @@ export async function createProposal(prevState: ProposalActionState | null, form
         };
     }
 
-    const { projectId, title, description, initialVote, summary } = validatedFields.data;
+    const { projectId, title, description, initialVote } = validatedFields.data;
 
     try {
         const userId = user.id ?? user.email;
+        const summary =
+            (await buildProposalSummary(title, description || "")) ??
+            null;
 
         await db.insert(users).values({
             id: userId,
@@ -72,7 +74,7 @@ export async function createProposal(prevState: ProposalActionState | null, form
                 authorAvatarUrl: user.profilePictureUrl || null,
                 title,
                 description: description || null,
-                summary: (summary?.toString().trim() || fallbackSummary(description || title, 220)) ?? null,
+                summary,
                 isNegativeInitiative: false, // Defaulting for now
                 userId,
             })

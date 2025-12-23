@@ -208,6 +208,8 @@ export default async function ProjectPage({
                             description: p.description,
                             summary: p.summary,
                         }))}
+                        projectTitle={project.title}
+                        projectDescription={project.description || ""}
                     />
                 </div>
             </div>

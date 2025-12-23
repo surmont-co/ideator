@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createProposal } from "@/app/actions/proposals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
-import * as React from "react";
+import { Loader2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { castVote } from "@/app/actions/proposals";
@@ -23,103 +22,35 @@ type ExistingProposal = {
 type SimilarMatch = {
     id: string;
     title: string;
-    score: number;
-    reason: string;
+    similarity: number;
+    explanation: string;
 };
-
-const SIMILARITY_THRESHOLD = 0.4;
-const SUMMARY_MAX_CHARS = 200;
-
-function normalize(text: string) {
-    return text
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9ăâîșț ]/gi, " ");
-}
-
-function tokenize(text: string) {
-    return normalize(text)
-        .split(/\s+/)
-        .filter((t) => t.length > 2);
-}
-
-function jaccardScore(tokensA: string[], tokensB: string[]) {
-    const setA = new Set(tokensA);
-    const setB = new Set(tokensB);
-    const intersection = [...setA].filter((t) => setB.has(t));
-    const union = new Set([...setA, ...setB]);
-    if (union.size === 0) return 0;
-    return intersection.length / union.size;
-}
-
-function trigrams(text: string) {
-    const cleaned = normalize(text).replace(/\s+/g, " ").trim();
-    const grams: string[] = [];
-    for (let i = 0; i < cleaned.length - 2; i += 1) {
-        grams.push(cleaned.slice(i, i + 3));
-    }
-    return grams;
-}
-
-function diceCoefficient(a: string[], b: string[]) {
-    if (a.length === 0 || b.length === 0) return 0;
-    const setB = new Set(b);
-    const intersection = a.filter((g) => setB.has(g)).length;
-    return (2 * intersection) / (a.length + b.length);
-}
-
-function overlapRatio(a: string, b: string) {
-    if (!a || !b) return 0;
-    if (a.includes(b)) return b.length / Math.max(a.length, b.length);
-    if (b.includes(a)) return a.length / Math.max(a.length, b.length);
-    return 0;
-}
-
-function tokenSimilarityScore(tokensA: string[], tokensB: string[]) {
-    if (tokensA.length === 0 || tokensB.length === 0) return 0;
-    const bestMatches = tokensA.map((tokenA) => {
-        let best = 0;
-        for (const tokenB of tokensB) {
-            const ratio = overlapRatio(tokenA, tokenB);
-            if (ratio > best) best = ratio;
-        }
-        return best;
-    });
-    return bestMatches.reduce((sum, v) => sum + v, 0) / tokensA.length;
-}
 
 export function ProposalForm({
     projectId,
     locale,
     existingProposals = [],
+    projectTitle,
+    projectDescription,
 }: {
     projectId: string;
     locale?: Locale;
     existingProposals?: ExistingProposal[];
+    projectTitle: string;
+    projectDescription: string;
 }) {
     const [state, action, isPending] = useActionState(createProposal, null);
     const [vote, setVote] = useState<"1" | "-1">("1");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [generatedSummary, setGeneratedSummary] = useState("");
-    const [isSummarizing, setIsSummarizing] = useState(false);
     const [similarMatches, setSimilarMatches] = useState<SimilarMatch[]>([]);
     const [showSimilarModal, setShowSimilarModal] = useState(false);
     const [bypassSimilarity, setBypassSimilarity] = useState(false);
     const [isCheckingSimilarity, setIsCheckingSimilarity] = useState(false);
     const [isVotingSimilar, setIsVotingSimilar] = useState(false);
+    const [similarityError, setSimilarityError] = useState<string | null>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const { t } = getTranslations(locale);
-
-    const existingTokens = useMemo(() => {
-        return existingProposals.map((p) => {
-            const text = `${p.title} ${p.description || ""} ${p.summary || ""}`;
-            const tokens = tokenize(text);
-            const grams = trigrams(text);
-            return { ...p, tokens, grams, fullText: text };
-        });
-    }, [existingProposals]);
 
     useEffect(() => {
         if (state?.success) {
@@ -129,97 +60,67 @@ export function ProposalForm({
             setVote("1");
             setTitle("");
             setDescription("");
-            setGeneratedSummary("");
             setSimilarMatches([]);
             setShowSimilarModal(false);
             setBypassSimilarity(false);
         }
     }, [state?.success]);
 
-    // Similarity checking while typing (debounced by 250ms).
-    useEffect(() => {
-        const inputText = `${title} ${description}`.trim();
-        if (!inputText) {
-            setSimilarMatches([]);
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        if (bypassSimilarity) {
+            // Allow the native/action submit to proceed without re-checking.
+            setBypassSimilarity(false);
             return;
         }
+        if (isPending || isCheckingSimilarity) {
+            event.preventDefault();
+            return;
+        }
+        event.preventDefault();
         setIsCheckingSimilarity(true);
-        const timer = window.setTimeout(() => {
-            const tokens = tokenize(inputText);
-            const grams = trigrams(inputText);
-            const candidates = existingTokens
-                .map((p) => {
-                    const tokenScore = jaccardScore(tokens, p.tokens);
-                    const gramScore = diceCoefficient(grams, p.grams);
-                    const fuzzyTokenScore = tokenSimilarityScore(tokens, p.tokens);
-                    const score = Math.max(tokenScore, gramScore, fuzzyTokenScore);
-                    const sharedTokens = [...new Set(tokens.filter((t) => p.tokens.includes(t)))].slice(0, 6);
-                    const reason =
-                        sharedTokens.length > 0
-                            ? `Cuvinte comune: ${sharedTokens.join(", ")}`
-                            : fuzzyTokenScore >= SIMILARITY_THRESHOLD
-                                ? "Conținut foarte similar"
-                                : gramScore >= SIMILARITY_THRESHOLD
-                                    ? "Formulare similară"
-                                    : "";
-                    return {
+        setShowSimilarModal(false);
+        setSimilarMatches([]);
+        setSimilarityError(null);
+        try {
+            const res = await fetch("/api/proposals/similarity", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    proposal: { title, description },
+                    existing: existingProposals.map((p) => ({
                         id: p.id,
                         title: p.title,
-                        score,
-                        reason,
-                    };
-                })
-                .filter((c) => c.score >= SIMILARITY_THRESHOLD)
-                .sort((a, b) => b.score - a.score);
-            setSimilarMatches(candidates);
-            setIsCheckingSimilarity(false);
-            setBypassSimilarity(false);
-        }, 250);
-        return () => window.clearTimeout(timer);
-    }, [title, description, existingTokens]);
-
-    // Generate summary while typing.
-    useEffect(() => {
-        const source = `${title}\n\n${description}`.trim();
-        if (!source) {
-            setGeneratedSummary("");
-            return;
-        }
-        setIsSummarizing(true);
-        const controller = new AbortController();
-        const timer = window.setTimeout(async () => {
-            try {
-                const res = await fetch("/api/proposals/summarize", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ title, description }),
-                    signal: controller.signal,
-                });
-                const data = (await res.json()) as { summary?: string };
-                setGeneratedSummary((data.summary || "").slice(0, SUMMARY_MAX_CHARS));
-            } catch {
-                setGeneratedSummary(source.slice(0, SUMMARY_MAX_CHARS));
-            } finally {
-                setIsSummarizing(false);
+                        description: p.description,
+                        summary: p.summary,
+                    })),
+                    project: { title: projectTitle, description: projectDescription },
+                }),
+            });
+            const data = (await res.json()) as { matches?: { id: string; similarity: number; explanation?: string }[] };
+            if (process.env.NODE_ENV === "development") {
+                // Helpful for debugging AI outputs in the browser console.
+                // eslint-disable-next-line no-console
+                console.info("[similarity_client_response]", data);
             }
-        }, 300);
-        return () => {
-            controller.abort();
-            window.clearTimeout(timer);
-        };
-    }, [title, description]);
+            const matches = (data.matches || []).map((m) => {
+                const ref = existingProposals.find((p) => p.id === m.id);
+                return {
+                    id: m.id,
+                    title: ref?.title || m.id,
+                    similarity: m.similarity,
+                    explanation: m.explanation || "",
+                };
+            }).sort((a, b) => b.similarity - a.similarity);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (isPending || isSummarizing || isCheckingSimilarity) {
-            event.preventDefault();
-            return;
-        }
-        if (!bypassSimilarity && similarMatches.length > 0) {
-            event.preventDefault();
+            setSimilarMatches(matches);
             setShowSimilarModal(true);
-            return;
+        } catch (error) {
+            console.error("Similarity check failed", error);
+            setSimilarityError(t("proposalForm.checkingSimilarity"));
+            setShowSimilarModal(true);
+        } finally {
+            setIsCheckingSimilarity(false);
         }
-        setBypassSimilarity(false);
     };
 
     const confirmSubmit = () => {
@@ -239,7 +140,7 @@ export function ProposalForm({
         }
     };
 
-    const disableSubmit = isPending || isSummarizing || isCheckingSimilarity;
+    const disableSubmit = isPending || isCheckingSimilarity;
     const showSimilarityWarning = similarMatches.length > 0 && !bypassSimilarity;
 
     return (
@@ -251,7 +152,6 @@ export function ProposalForm({
                 <form ref={formRef} action={action} onSubmit={handleSubmit} className="space-y-5 relative">
                     <input type="hidden" name="projectId" value={projectId} />
                     <input type="hidden" name="initialVote" value={vote} />
-                    <input type="hidden" name="summary" value={generatedSummary} />
 
                     <div className="space-y-2">
                         <Input
@@ -319,57 +219,63 @@ export function ProposalForm({
                                     <p className="text-sm text-muted-foreground">{t("proposalForm.similarSubtitle")}</p>
                                 </div>
                                 <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2">
-                                    {similarMatches.map((match) => (
-                                        <div
-                                            key={match.id}
-                                            className={cn(
-                                                "group rounded-lg border border-border/70 bg-muted/40 p-3 transition hover:border-primary/60 hover:bg-primary/5",
-                                                isVotingSimilar && "opacity-70",
-                                            )}
-                                        >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="space-y-1">
-                                                    <div className="font-semibold text-sm">{match.title}</div>
-                                                    {match.reason && (
-                                                        <div className="text-sm text-muted-foreground">{match.reason}</div>
-                                                    )}
-                                                </div>
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        onClick={() => handleVoteSimilar(match.id, 1)}
-                                                        disabled={isVotingSimilar}
-                                                        className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
-                                                    >
-                                                        <ThumbsUp className="w-4 h-4" />
-                                                        {t("proposalForm.upvote")}
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        onClick={() => handleVoteSimilar(match.id, -1)}
-                                                        disabled={isVotingSimilar}
-                                                        className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
-                                                    >
-                                                        <ThumbsDown className="w-4 h-4" />
-                                                        {t("proposalForm.downvote")}
-                                                    </Button>
+                                    {similarMatches.map((match) => {
+                                        const pct = Math.max(0, Math.min(100, Math.round(match.similarity)));
+                                        return (
+                                            <div
+                                                key={match.id}
+                                                className={cn(
+                                                    "group rounded-lg border border-border/70 bg-muted/40 p-3 transition hover:border-primary/60 hover:bg-primary/5 relative overflow-hidden",
+                                                    isVotingSimilar && "opacity-70",
+                                                )}
+                                            >
+                                                <div
+                                                    className="absolute inset-0 opacity-30 pointer-events-none"
+                                                    aria-hidden
+                                                    style={{
+                                                        background: `linear-gradient(90deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.25) ${pct}%, transparent ${pct}%)`,
+                                                    }}
+                                                />
+                                                <div className="relative flex items-start justify-between gap-3">
+                                                    <div className="space-y-1">
+                                                        <div className="font-semibold text-sm">{match.title}</div>
+                                                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                                            <span className="font-semibold text-foreground">{pct}%</span>
+                                                            {match.explanation && <span>• {match.explanation}</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            onClick={() => handleVoteSimilar(match.id, 1)}
+                                                            disabled={isVotingSimilar}
+                                                            className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                        >
+                                                            <ThumbsUp className="w-4 h-4" />
+                                                            {t("proposalForm.upvote")}
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            onClick={() => handleVoteSimilar(match.id, -1)}
+                                                            disabled={isVotingSimilar}
+                                                            className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                        >
+                                                            <ThumbsDown className="w-4 h-4" />
+                                                            {t("proposalForm.downvote")}
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
+                                    {similarMatches.length === 0 && similarityError && (
+                                        <div className="text-sm text-muted-foreground">{similarityError}</div>
+                                    )}
                                 </div>
-                                {generatedSummary && (
-                                    <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
-                                        <div className="text-xs uppercase font-semibold text-muted-foreground mb-1">
-                                            {t("proposalForm.summaryPreview")}
-                                        </div>
-                                        <div className="text-sm">{generatedSummary}</div>
-                                    </div>
-                                )}
                                 <div className="flex justify-end gap-3">
                                     <Button variant="ghost" type="button" onClick={() => setShowSimilarModal(false)}>
                                         {t("proposalForm.cancel")}
@@ -377,6 +283,17 @@ export function ProposalForm({
                                     <Button type="button" onClick={confirmSubmit}>
                                         {t("proposalForm.submitAnyway")}
                                     </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isCheckingSimilarity && (
+                        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                            <div className="rounded-2xl bg-card border border-border shadow-xl px-6 py-5 flex items-center gap-3">
+                                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                                <div className="text-sm text-muted-foreground">
+                                    {t("proposalForm.analyzing")}
                                 </div>
                             </div>
                         </div>
