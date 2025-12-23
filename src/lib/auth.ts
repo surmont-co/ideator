@@ -68,9 +68,9 @@ export async function login(user: SessionUser, domainOverride?: string) {
 
 export async function logout() {
   const cookieStore = await cookies();
-  cookieStore.delete("session", {
-    path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
-  });
+  if (cookieDomain) {
+    cookieStore.delete({ name: "session", domain: cookieDomain, path: "/" });
+  }
+  cookieStore.delete("session");
   redirect("/");
 }
