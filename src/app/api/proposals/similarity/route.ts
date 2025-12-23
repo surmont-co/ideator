@@ -113,6 +113,7 @@ export async function POST(request: Request) {
         summary: p.summary || "",
       })),
       proposal: {
+        id: proposal.id || "new",
         title: proposal.title || "",
         description: proposal.description || "",
       },
