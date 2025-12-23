@@ -2,83 +2,48 @@
 
 ## Directory Overview
 
-This directory contains the specifications for a web application called "Voter/Ideator". The purpose of this application is to facilitate the democratic prioritization of proposals within a company. It allows users to submit, discuss, and vote on ideas, with a clear visual representation of their popularity.
-
-The project is currently in the planning phase, and no code has been written yet. The existing files are:
-
-*   `request.md`: A high-level description of the application's features, written in Romanian.
-*   `specs.md`: A detailed technical specification (Product Requirements Document) for the application, also in Romanian. It outlines the database schema, technology stack, and UI mockups.
+This directory contains the source code and specifications for "Voter/Ideator", a web application for democratic prioritization of proposals.
 
 ## Project Overview
 
-The "Voter/Ideator" is an internal web application for collecting, debating, and democratically prioritizing improvement proposals. The system is designed to provide a quick mathematical view of consensus (Pro vs. Con).
+"Voter/Ideator" allows internal teams to collect, debate, and prioritize proposals.
+*   **Stack:** Next.js 15 (App Router), TypeScript, Tailwind CSS, SQLite, Drizzle ORM.
+*   **Auth:** WorkOS.
+*   **UI:** Custom Accordion with Vote Bar Charts (Shadcn/Radix primitives).
 
-*   **Core Technologies:**
-    *   **Database:** SQLite
-    *   **Authentication:** WorkOS (for SSO/Google/Magic Link)
-    *   **Frontend:** The specifications suggest a modern web framework like Next.js, Remix, or Go+Templ.
-*   **Key Features:**
-    *   **Project-based proposals:** Proposals are organized under projects, each with a title, description, and deadline.
-    *   **Proposal submission:** Users can add proposals with a one-line definition and a detailed description. The system should check for duplicates.
-    *   **Voting:** Users can cast a positive or negative vote on each proposal.
-    *   **Accordion View:** Proposals are displayed in an accordion interface, ordered by the total number of votes. The background of each accordion item will be a bar chart representing the positive (green) and negative (red) votes.
-    *   **Discussion:** Each proposal has a nested comment section for discussions.
-    *   **Markdown Support:** All content (proposals and comments) supports Markdown.
+## Development Protocols
 
-## Database Schema (SQLite)
+### 1. Quality Assurance & Testing Strategy (MANDATORY)
+**Tool:** Playwright (Node.js) with Headless Chromium.
 
-```sql
--- Projects (Ex: "Îmbunătățiri 2026")
-CREATE TABLE projects (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT, -- Markdown
-    deadline DATETIME NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+Every frontend implementation or modification **must** be followed by a comprehensive Playwright test run. The goal is to ensure an impressive, functional, responsive, and accessible UI.
 
--- Proposals
-CREATE TABLE proposals (
-    id TEXT PRIMARY KEY,
-    project_id TEXT REFERENCES projects(id),
-    author_id TEXT NOT NULL, -- From WorkOS
-    title TEXT NOT NULL,
-    description TEXT, -- Markdown
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    is_negative_initiative BOOLEAN DEFAULT FALSE -- If the idea is "What to eliminate"
-);
+**Testing Checklist:**
+*   **Functionality:** Verify critical user paths (voting, expanding accordion, submitting forms).
+*   **Visual/UX:** Ensure components render correctly without layout shifts.
+*   **Responsiveness:** Tests must run on both `Desktop Chrome` and `Mobile Chrome` (Pixel 5 emulation).
+*   **Accessibility (A11y):** Use `@axe-core/playwright` to scan every new page/component for WCAG violations.
 
--- Votes (Unique per user/proposal)
-CREATE TABLE votes (
-    proposal_id TEXT REFERENCES proposals(id),
-    user_id TEXT NOT NULL,
-    value INTEGER CHECK (value IN (1, -1)),
-    PRIMARY KEY (proposal_id, user_id)
-);
-
--- Comments (With support for nesting/hierarchy)
-CREATE TABLE comments (
-    id TEXT PRIMARY KEY,
-    proposal_id TEXT REFERENCES proposals(id),
-    parent_id TEXT REFERENCES comments(id), -- For threads
-    author_id TEXT NOT NULL,
-    content TEXT NOT NULL, -- Markdown
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+**Command:**
+```bash
+npx playwright test
 ```
 
-## Development Conventions
+### 2. Database Schema (SQLite)
 
-As the project has not yet started, there are no established coding conventions. However, the `specs.md` file suggests a modern web development stack and practices.
+Defined in `src/db/schema.ts` using Drizzle ORM.
+*   **Projects:** Group proposals.
+*   **Proposals:** The core items.
+*   **Votes:** +1/-1 values.
+*   **Comments:** Nested discussions.
 
-## Building and Running
+### 3. Setup & Running
 
-There are no build or run commands yet, as there is no code in the project.
+*   **Install:** `npm install`
+*   **Dev Server:** `npm run dev`
+*   **Database Studio:** `npx drizzle-kit studio`
+*   **Auth Setup:** See `WORKOS_SETUP.md`
 
-**TODO:**
-
-*   Initialize a new project using a modern web framework (e.g., Next.js, Remix, or Go with Templ).
-*   Implement the database schema using SQLite.
-*   Develop the UI components, starting with the accordion with the background bar chart.
-*   Implement the backend logic for proposals, voting, and comments.
+## Next Steps
 *   Integrate WorkOS for authentication.
+*   Implement real backend logic for proposals (replace Mockup).
