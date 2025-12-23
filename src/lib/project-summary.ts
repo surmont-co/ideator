@@ -20,9 +20,10 @@ export async function generateProjectSummary(projectId: string, options?: Summar
   if (project.summary && !options?.force) return false;
 
   const promptSource = [
-    "Summarize as a concise explanation of the project's purpose and intended impact.",
+    "Write a terse noun-phrase summary (no imperatives, no second-person, no pleasantries).",
     "Assume the title is shown separately; do not repeat or paraphrase the title or its keywords.",
-    "Format the summary as a request for action from the reader, as if you were explaining it to them in a conversation.",
+    "Describe what the project collects (types of proposals/ideas) and any criteria or expectations mentioned; omit if not present.",
+    "Keep it neutral/descriptive, as a short label for the project purpose.",
     `Title: ${project.title}`,
     `Description:\n${project.description ?? ""}`,
   ].join("\n\n");
