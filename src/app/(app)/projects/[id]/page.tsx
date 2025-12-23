@@ -171,41 +171,41 @@ export default async function ProjectPage({
                 <CardContent className="pt-6 space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                                <h1 className="text-3xl font-bold leading-tight">
-                                    <MarkdownRenderer content={project.title} simple className="prose-headings:m-0 prose-p:m-0 inline" />
-                                </h1>
-                                <Avatar className="h-11 w-11 border border-border/80">
+                            <div className="flex items-start gap-3">
+                                <div className="flex-1">
+                                    <h1 className="text-3xl font-bold leading-tight">
+                                        <MarkdownRenderer content={project.title} simple className="prose-headings:m-0 prose-p:m-0 inline" />
+                                    </h1>
+                                </div>
+                                <Avatar className="h-11 w-11 border border-border/80 shrink-0">
                                     <AvatarImage src={project.authorAvatarUrl || ""} />
                                     <AvatarFallback>{(project.authorId || "?").substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                             </div>
                             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                            <span className="inline-flex items-center gap-2 rounded-full bg-secondary text-foreground px-3 py-1.5 font-semibold shadow-inner">
-                                <Calendar className="w-4 h-4" />
-                                <span>{t("project.due", { label: dueLabel })}</span>
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>{formatDeadline(new Date(project.deadline))}</span>
-                            </span>
+                                <span className="inline-flex items-center gap-2 rounded-full bg-secondary text-foreground px-3 py-1.5 font-semibold shadow-inner">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{t("project.due", { label: dueLabel })}</span>
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{formatDeadline(new Date(project.deadline))}</span>
+                                </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <ProjectDescriptionToggle
-                                summary={summaryContent}
-                                full={fullContent}
-                                showLabel={t("project.showDetails")}
-                                hideLabel={t("project.hideDetails")}
-                                actions={isOwner ? (
-                                    <RegenerateSummaryButton
-                                        projectId={project.id}
-                                        label={t("project.regenerateSummary")}
-                                    />
-                                ) : undefined}
-                            />
-                        </div>
                     </div>
+                    <ProjectDescriptionToggle
+                        summary={summaryContent}
+                        full={fullContent}
+                        showLabel={t("project.showDetails")}
+                        hideLabel={t("project.hideDetails")}
+                        actions={isOwner ? (
+                            <RegenerateSummaryButton
+                                projectId={project.id}
+                                label={t("project.regenerateSummary")}
+                            />
+                        ) : undefined}
+                    />
                 </CardContent>
             </Card>
 

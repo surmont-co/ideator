@@ -29,15 +29,13 @@ export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel, 
     }, [hasInteracted]);
 
     return (
-        <div className="rounded-xl border border-border/60 bg-white/60 dark:bg-slate-900/40 px-4 py-3 relative">
-            <div className="flex items-start">
-                <div className="flex-1 pr-32">
-                    <MarkdownRenderer
-                        content={content}
-                        className="max-w-none leading-relaxed text-slate-700 dark:text-slate-200"
-                    />
-                </div>
-                <div className="absolute right-4 bottom-3 flex items-center gap-2">
+        <div className="rounded-xl border border-border/60 bg-white/60 dark:bg-slate-900/40 px-4 py-3">
+            <div className="flex flex-col gap-3">
+                <MarkdownRenderer
+                    content={content}
+                    className="max-w-none leading-relaxed text-slate-700 dark:text-slate-200"
+                />
+                <div className="flex items-center justify-end gap-2">
                     {actions}
                     <Button
                         variant="outline"
