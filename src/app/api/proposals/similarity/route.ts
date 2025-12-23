@@ -46,14 +46,14 @@ function extractJson(text: string): SimilarResult[] {
     }
   }
   // Regex extraction fallback when JSON is malformed/truncated
-  const regex = /"(?<id>[^"]+)":\s*\{\s*"similarity"\s*:\s*(?<sim>\d+(?:\.\d+)?)[^}]*?"explanation"\s*:\s*"(?<exp>[^"]*)"/g;
+  const regex = /"([^"]+)":\s*\{\s*"similarity"\s*:\s*(\d+(?:\.\d+)?)[^}]*?"explanation"\s*:\s*"([^"]*)"/g;
   const results: SimilarResult[] = [];
   let m;
   while ((m = regex.exec(text)) !== null) {
     results.push({
-      id: m.groups?.id ?? "",
-      similarity: Number(m.groups?.sim ?? 0),
-      explanation: m.groups?.exp ?? "",
+      id: m[1] ?? "",
+      similarity: Number(m[2] ?? 0),
+      explanation: m[3] ?? "",
     });
   }
   return results;
