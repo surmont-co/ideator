@@ -112,7 +112,7 @@ export default async function ProjectPage({
 
     const formatLocale = locale === "ro" ? roLocale : enUS;
     const dateFormat = locale === "ro" ? "d MMMM yyyy 'la' HH:mm" : "d MMMM yyyy 'at' h:mm a";
-    const dueLabel = formatDistanceToNow(new Date(project.deadline), { addSuffix: true });
+    const dueLabel = formatDistanceToNow(new Date(project.deadline), { addSuffix: true, locale: formatLocale });
     const roMonthMap: Record<string, string> = {
         ianuarie: "Ianuarie",
         februarie: "Februarie",
@@ -170,29 +170,29 @@ export default async function ProjectPage({
             <Card className="flex flex-col border-border/80 shadow-sm rounded-2xl bg-card">
                 <CardContent className="pt-6 space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="flex-1 space-y-3">
-                            <div className="flex items-start gap-3">
-                                <div className="flex-1">
+                        <div className="flex flex-1 flex-col gap-3">
+                            <div className="flex items-start gap-3 w-full">
+                                <div className="flex-1 min-w-0">
                                     <h1 className="text-3xl font-bold leading-tight">
                                         <MarkdownRenderer content={project.title} simple className="prose-headings:m-0 prose-p:m-0 inline" />
                                     </h1>
                                 </div>
-                                <Avatar className="h-11 w-11 border border-border/80 shrink-0">
-                                    <AvatarImage src={project.authorAvatarUrl || ""} />
-                                    <AvatarFallback>{(project.authorId || "?").substring(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                                 <span className="inline-flex items-center gap-2 rounded-full bg-secondary text-foreground px-3 py-1.5 font-semibold shadow-inner">
                                     <Calendar className="w-4 h-4" />
                                     <span>{t("project.due", { label: dueLabel })}</span>
                                 </span>
-                                <span className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5">
                                     <Calendar className="w-4 h-4" />
-                                    <span>{formatDeadline(new Date(project.deadline))}</span>
+                                    <span>{t("project.deadlineLabel")}: {formatDeadline(new Date(project.deadline))}</span>
                                 </span>
                             </div>
                         </div>
+                        <Avatar className="h-11 w-11 border border-border/80 shrink-0">
+                            <AvatarImage src={project.authorAvatarUrl || ""} />
+                            <AvatarFallback>{(project.authorId || "?").substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
                     </div>
                     <ProjectDescriptionToggle
                         summary={summaryContent}

@@ -82,9 +82,9 @@ const AccordionTrigger = React.forwardRef<
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-2 text-sm font-semibold min-w-[4.5rem] justify-center px-3 py-1 rounded-full bg-white/70 dark:bg-slate-900/50 shadow-sm">
-            <span className="text-green-600 dark:text-green-400">↑ {upvotes}</span>
+            <span className="text-green-600 dark:text-green-400">{upvotes}</span>
             <span className="text-slate-400">/</span>
-            <span className="text-rose-600 dark:text-rose-400">↓ {downvotes}</span>
+            <span className="text-rose-600 dark:text-rose-400">{downvotes}</span>
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
             <MessageSquare className="h-3.5 w-3.5" />

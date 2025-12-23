@@ -39,6 +39,7 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.showDetails": "View details",
         "project.hideDetails": "Hide details",
         "project.regenerateSummary": "Regenerate summary",
+        "project.deadlineLabel": "Deadline",
 
         "proposalForm.title": "Title (one-line definition) *",
         "proposalForm.description": "Description (supports Markdown)",
@@ -108,6 +109,7 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.showDetails": "Vezi detalii",
         "project.hideDetails": "Ascunde detalii",
         "project.regenerateSummary": "Regenerează sumarul",
+        "project.deadlineLabel": "Termen limită",
 
         "proposalForm.title": "Titlu (definiție pe scurt) *",
         "proposalForm.description": "Descriere (suport Markdown)",
