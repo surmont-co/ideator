@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createProposal } from "@/app/actions/proposals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ type SimilarMatch = {
     title: string;
     similarity: number;
     explanation: string;
+    userVote?: number | null;
 };
 
 export function ProposalForm({
@@ -49,6 +50,10 @@ export function ProposalForm({
     const [isCheckingSimilarity, setIsCheckingSimilarity] = useState(false);
     const [isVotingSimilar, setIsVotingSimilar] = useState(false);
     const [similarityError, setSimilarityError] = useState<string | null>(null);
+    const voteLookup = useMemo(
+        () => new Map(existingProposals.map((p) => [p.id, p.userVote ?? null])),
+        [existingProposals],
+    );
     const formRef = useRef<HTMLFormElement>(null);
     const { t } = getTranslations(locale);
 
@@ -105,11 +110,13 @@ export function ProposalForm({
             const matches = (data.matches || [])
                 .map((m) => {
                     const ref = existingProposals.find((p) => p.id === m.id);
+                    const userVote = voteLookup.get(m.id) ?? ref?.userVote ?? null;
                     return {
                         id: m.id,
                         title: ref?.title || m.id,
                         similarity: m.similarity,
                         explanation: m.explanation || "",
+                        userVote,
                     };
                 })
                 .filter((m) => m.similarity > 0)
@@ -190,24 +197,30 @@ export function ProposalForm({
                     </div>
 
                     <div className="flex flex-wrap justify-between items-center gap-3 pt-2">
-                        <div className="flex gap-2">
+                        <div className="flex rounded-md overflow-hidden border border-border/70 bg-secondary">
                             <Button
                                 type="button"
                                 variant="secondary"
-                                className={`gap-2 h-10 px-3 ${vote === "1" ? "border-primary text-primary" : ""}`}
+                                className={cn(
+                                    "gap-2 h-9 px-4 bg-secondary text-secondary-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200 shadow-sm cursor-pointer rounded-none border-r border-border/60",
+                                    vote === "1" && "bg-green-50 text-green-700 ring-1 ring-green-300",
+                                )}
                                 onClick={() => setVote("1")}
+                                aria-label={t("proposalForm.upvote")}
                             >
                                 <ThumbsUp className="w-4 h-4" />
-                                {t("proposalForm.upvote")}
                             </Button>
                             <Button
                                 type="button"
                                 variant="secondary"
-                                className={`gap-2 h-10 px-3 ${vote === "-1" ? "border-destructive text-destructive" : ""}`}
+                                className={cn(
+                                    "gap-2 h-9 px-4 bg-secondary text-secondary-foreground hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 shadow-sm cursor-pointer rounded-none",
+                                    vote === "-1" && "bg-rose-50 text-rose-700 ring-1 ring-rose-300",
+                                )}
                                 onClick={() => setVote("-1")}
+                                aria-label={t("proposalForm.downvote")}
                             >
                                 <ThumbsDown className="w-4 h-4" />
-                                {t("proposalForm.downvote")}
                             </Button>
                         </div>
                         <Button type="submit" className="h-11 px-5 text-base font-semibold" disabled={disableSubmit}>
@@ -230,6 +243,7 @@ export function ProposalForm({
                                 <div className="space-y-4 max-h-[320px] overflow-y-auto pr-2">
                                     {similarMatches.map((match) => {
                                         const pct = Math.max(0, Math.min(100, Math.round(match.similarity)));
+                                        const userVote = voteLookup.get(match.id) ?? match.userVote ?? null;
                                         return (
                                             <div
                                                 key={match.id}
@@ -252,17 +266,20 @@ export function ProposalForm({
                                                             {match.explanation && <span className="leading-relaxed">{match.explanation}</span>}
                                                         </div>
                                                     </div>
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
+                                                    <div className="flex rounded-md overflow-hidden border border-border/70 bg-secondary opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
                                                         <Button
                                                             type="button"
                                                             size="sm"
                                                             variant="secondary"
                                                             onClick={() => handleVoteSimilar(match.id, 1)}
                                                             disabled={isVotingSimilar}
-                                                            className="h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm cursor-pointer"
+                                                            className={cn(
+                                                                "h-9 px-3 bg-secondary text-secondary-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200 shadow-sm cursor-pointer rounded-none border-r border-border/60",
+                                                                userVote === 1 && "bg-green-50 text-green-700 ring-1 ring-green-300",
+                                                            )}
+                                                            aria-label={t("proposalForm.upvote")}
                                                         >
                                                             <ThumbsUp className="w-4 h-4" />
-                                                            {t("proposalForm.upvote")}
                                                         </Button>
                                                         <Button
                                                             type="button"
@@ -270,10 +287,13 @@ export function ProposalForm({
                                                             variant="secondary"
                                                             onClick={() => handleVoteSimilar(match.id, -1)}
                                                             disabled={isVotingSimilar}
-                                                            className="h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm cursor-pointer"
+                                                            className={cn(
+                                                                "h-9 px-3 bg-secondary text-secondary-foreground hover:bg-rose-50 hover:text-rose-700 hover-border-rose-200 shadow-sm cursor-pointer rounded-none",
+                                                                userVote === -1 && "bg-rose-50 text-rose-700 ring-1 ring-rose-300",
+                                                            )}
+                                                            aria-label={t("proposalForm.downvote")}
                                                         >
                                                             <ThumbsDown className="w-4 h-4" />
-                                                            {t("proposalForm.downvote")}
                                                         </Button>
                                                     </div>
                                                 </div>

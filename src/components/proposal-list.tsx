@@ -13,6 +13,8 @@ import { castVote } from "@/app/actions/proposals";
 import { ProposalDiscussionSheet } from "@/components/proposal-discussion-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTranslations } from "@/lib/i18n";
+import { type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 interface Proposal {
     id: string;
@@ -23,6 +25,7 @@ interface Proposal {
     createdAt: Date | null;
     upvotes: number;
     downvotes: number;
+    currentUserVote?: number | null;
     authorAvatarUrl?: string | null;
 }
 
@@ -40,13 +43,14 @@ interface ProposalListProps {
     comments: Comment[];
     projectId: string;
     currentUserEmail?: string;
+    locale?: Locale;
 }
 
-export function ProposalList({ proposals, comments, projectId, currentUserEmail }: ProposalListProps) {
+export function ProposalList({ proposals, comments, projectId, currentUserEmail, locale }: ProposalListProps) {
     const handleVote = async (proposalId: string, value: number) => {
         await castVote(proposalId, value, projectId);
     };
-    const { t } = getTranslations();
+    const { t } = getTranslations(locale);
 
     return (
         <Accordion type="single" collapsible className="w-full space-y-4">
@@ -79,7 +83,9 @@ export function ProposalList({ proposals, comments, projectId, currentUserEmail 
                                         {proposal.authorId}
                                     </span>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs text-muted-foreground">Up {proposal.upvotes} / Down {proposal.downvotes}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {t("proposal.upDown", { up: proposal.upvotes, down: proposal.downvotes })}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -87,38 +93,45 @@ export function ProposalList({ proposals, comments, projectId, currentUserEmail 
                                     <MarkdownRenderer content={proposal.summary || proposal.description || t("proposalList.noDescription")} />
                                 </div>
 
-                                <div className="flex flex-wrap justify-between items-center mt-4 gap-3 pt-1">
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="gap-2 h-10 px-3 hover:bg-green-50 hover:text-green-700 hover:border-green-200"
-                                            onClick={() => handleVote(proposal.id, 1)}
-                                        >
-                                            <ThumbsUp className="w-4 h-4" />
-                                            Upvote
-                                        </Button>
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="gap-2 h-10 px-3 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
-                                            onClick={() => handleVote(proposal.id, -1)}
-                                        >
-                                            <ThumbsDown className="w-4 h-4" />
-                                            Downvote
-                                        </Button>
-                                    </div>
-                                    <div className="flex gap-2 items-center">
-                                        <ProposalDiscussionSheet
-                                            proposalId={proposal.id}
-                                            projectId={projectId}
-                                            proposalTitle={proposal.title}
-                                            comments={proposalComments}
-                                            currentUserEmail={currentUserEmail}
-                                        />
-                                    </div>
+                            <div className="flex flex-wrap justify-between items-center mt-4 gap-3 pt-1">
+                                <div className="flex rounded-md overflow-hidden border border-border/70 bg-secondary">
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className={cn(
+                                            "h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200 shadow-sm cursor-pointer rounded-none border-r border-border/60",
+                                            proposal.currentUserVote === 1 && "bg-green-50 text-green-700 ring-1 ring-green-300",
+                                        )}
+                                        onClick={() => handleVote(proposal.id, 1)}
+                                        aria-label={t("proposalForm.upvote")}
+                                    >
+                                        <ThumbsUp className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className={cn(
+                                            "h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 shadow-sm cursor-pointer rounded-none",
+                                            proposal.currentUserVote === -1 && "bg-rose-50 text-rose-700 ring-1 ring-rose-300",
+                                        )}
+                                        onClick={() => handleVote(proposal.id, -1)}
+                                        aria-label={t("proposalForm.downvote")}
+                                    >
+                                        <ThumbsDown className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <div className="flex gap-2 items-center">
+                                    <ProposalDiscussionSheet
+                                        proposalId={proposal.id}
+                                        projectId={projectId}
+                                        proposalTitle={proposal.title}
+                                        comments={proposalComments}
+                                        currentUserEmail={currentUserEmail}
+                                        label={t("proposalList.comments")}
+                                    />
                                 </div>
                             </div>
+                                </div>
                         </AccordionContent>
                     </AccordionItem>
                 );

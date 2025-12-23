@@ -16,6 +16,18 @@
 
 ### Fixed
 - Resilience against LLM rate limits with provider failover; better logging for debugging AI output quality.
+- Vote buttons unified and localized; hover states color-coded (green/red) across list, form, and modal.
+
+## 0.3.1 - 2024-12-24
+
+### Added
+- Modalul de similaritate evidențiază votul curent al utilizatorului pentru propunerile existente (buton group cu selecție).
+
+### Changed
+- Butoanele Up/Down sunt doar cu iconițe și grupate atât în listă, formular, cât și în modal; hover colorizat și cursor pointer.
+
+### Fixed
+- Regex fallback pentru parsarea JSON-ului OpenAI din similaritate (map obiect) și propagarea userVote către modal.
 
 ## 0.2.0 - 2024-12-23
 

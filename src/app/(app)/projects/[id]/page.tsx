@@ -66,14 +66,24 @@ export default async function ProjectPage({
     // Drizzle dates are Date objects. Server Components -> Client Components need simple types.
     // upvotes/downvotes from SQL are usually numbers or strings.
 
+    // User-specific vote map
+    const userVoteRows = await db
+        .select({
+            proposalId: votes.proposalId,
+            value: votes.value,
+        })
+        .from(votes)
+        .where(eq(votes.userId, user.email));
+
+    const voteMap = new Map(userVoteRows.map((v) => [v.proposalId, v.value]));
+
     const formattedProposals = proposalsWithStats.map(p => ({
         ...p,
         summary: p.summary,
-        createdAt: p.createdAt, // Passed as Date, Next.js handles it if server component renders list items? NO. ProposalList is Client Component.
-        // Client components props must be serializable. Date is serializable.
-        // SQL aggregation result might be number or string depends on driver. better-sqlite3 returns number for count usually.
+        createdAt: p.createdAt,
         upvotes: Number(p.upvotes),
         downvotes: Number(p.downvotes),
+        currentUserVote: voteMap.get(p.id) ?? null,
     }));
 
 
@@ -194,23 +204,25 @@ export default async function ProjectPage({
                             comments={mappedComments}
                             projectId={project.id}
                             currentUserEmail={user.email}
+                            locale={locale}
                         />
                     )}
                 </div>
 
                 <div id="proposal-form" className="space-y-4 lg:sticky lg:top-24">
-                    <ProposalForm
-                        projectId={project.id}
-                        locale={locale}
-                        existingProposals={formattedProposals.map((p) => ({
-                            id: p.id,
-                            title: p.title,
-                            description: p.description,
-                            summary: p.summary,
-                        }))}
-                        projectTitle={project.title}
-                        projectDescription={project.description || ""}
-                    />
+                        <ProposalForm
+                            projectId={project.id}
+                            locale={locale}
+                            existingProposals={formattedProposals.map((p) => ({
+                                id: p.id,
+                                title: p.title,
+                                description: p.description,
+                                summary: p.summary,
+                                userVote: p.currentUserVote ?? null,
+                            }))}
+                            projectTitle={project.title}
+                            projectDescription={project.description || ""}
+                        />
                 </div>
             </div>
         </div>

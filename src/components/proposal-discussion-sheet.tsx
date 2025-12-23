@@ -32,6 +32,7 @@ interface ProposalDiscussionSheetProps {
     proposalTitle: string;
     comments: Comment[];
     currentUserEmail?: string;
+    label?: string;
 }
 
 export function ProposalDiscussionSheet({
@@ -40,6 +41,7 @@ export function ProposalDiscussionSheet({
     proposalTitle,
     comments,
     currentUserEmail,
+    label,
 }: ProposalDiscussionSheetProps) {
     const [state, action, isPending] = useActionState(addComment, null);
     const formRef = useRef<HTMLFormElement>(null);
@@ -54,9 +56,13 @@ export function ProposalDiscussionSheet({
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <Button variant="secondary" size="sm" className="gap-2 h-9 px-3 border border-border/70">
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2 h-9 px-3 border border-border/70 bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border-border cursor-pointer"
+                >
                     <MessageSquare className="w-4 h-4" />
-                    <span className="hidden sm:inline">Comments</span>
+                    <span className="hidden sm:inline">{label || "Comments"}</span>
                     <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-full text-xs font-semibold text-foreground shadow-sm">{comments.length}</span>
                 </Button>
             </SheetTrigger>

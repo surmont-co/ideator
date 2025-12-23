@@ -43,6 +43,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.summaryPreview": "Preview of your proposal summary",
         "proposalForm.checkingSimilarity": "Checking for similar proposals...",
         "proposalForm.analyzing": "Analyzing...",
+        "proposal.comments": "Comments",
+        "proposal.upDown": "Up {up} / Down {down}",
 
         "proposalList.noDescription": "No description.",
         "proposalList.comments": "Comments",
@@ -86,6 +88,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.summaryPreview": "Rezumatul propunerii tale",
         "proposalForm.checkingSimilarity": "Verificăm propunerile similare...",
         "proposalForm.analyzing": "Analizăm...",
+        "proposal.comments": "Comentarii",
+        "proposal.upDown": "Pro {up} / Contra {down}",
 
         "proposalList.noDescription": "Fără descriere.",
         "proposalList.comments": "Comentarii",
