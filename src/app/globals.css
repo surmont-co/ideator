@@ -1,30 +1,113 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(20 14.3% 4.1%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(20 14.3% 4.1%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(20 14.3% 4.1%);
+  --primary: hsl(20 90% 45%);
+  --primary-foreground: hsl(33 100% 97%);
+  --secondary: hsl(214 32% 96%);
+  --secondary-foreground: hsl(24 9.8% 10%);
+  --muted: hsl(214 32% 97%);
+  --muted-foreground: hsl(215 16% 32%);
+  --accent: hsl(214 32% 96%);
+  --accent-foreground: hsl(20 14% 20%);
+  --destructive: hsl(0 74% 46%);
+  --destructive-foreground: hsl(60 9.1% 97.8%);
+  --border: hsl(214 28% 88%);
+  --input: hsl(214 28% 88%);
+  --ring: hsl(20 90% 45%);
+  --radius: 0.6rem;
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
 }
 
 .dark {
-  --background: #0f172a; /* Slate 900 */
-  --foreground: #f8fafc; /* Slate 50 */
+  --background: hsl(20 14% 6%);
+  --foreground: hsl(60 9.1% 97.8%);
+  --card: hsl(20 14% 10%);
+  --card-foreground: hsl(60 9.1% 97.8%);
+  --popover: hsl(20 14% 6%);
+  --popover-foreground: hsl(60 9.1% 97.8%);
+  --primary: hsl(20 90% 50%);
+  --primary-foreground: hsl(35 100% 98%);
+  --secondary: hsl(24 7% 18%);
+  --secondary-foreground: hsl(60 9.1% 97.8%);
+  --muted: hsl(24 7% 18%);
+  --muted-foreground: hsl(24 5.4% 63.9%);
+  --accent: hsl(24 7% 18%);
+  --accent-foreground: hsl(60 9.1% 97.8%);
+  --destructive: hsl(0 72.2% 50.6%);
+  --destructive-foreground: hsl(60 9.1% 97.8%);
+  --border: hsl(24 6% 22%);
+  --input: hsl(24 6% 22%);
+  --ring: hsl(20 90% 50%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
+
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
   }
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
@@ -32,13 +115,27 @@
 }
 
 body {
-  background: radial-gradient(circle at top center, var(--background), var(--background)),
-              linear-gradient(to bottom, var(--background), var(--background));
-  color: var(--foreground);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100vh;
 }
 
 .dark body {
-  background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%);
+  /* Ensure gradient or background is handled via the variables now if desired, 
+     but standard shadcn themes stick to background color. 
+     If we want to keep the gradient we had, we can leave it or adapt it.
+     The user asked for theme support from the site, which implies standard flat backgrounds usually,
+     but our premium feel came from the gradient.
+     Let's keep the variables mapping but maybe apply the gradient using the new vars if possible?
+     Actually, for "copy paste compatibility", we should rely on background-color.
+     I will remove the specific gradient override to fully support standard themes, 
+     UNLESS the user prefers the premium look. 
+     User said "support site themes". Site themes are usually flat colors.
+     I will stick to the standard implementation for now. */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted-foreground) 75%, var(--foreground));
 }

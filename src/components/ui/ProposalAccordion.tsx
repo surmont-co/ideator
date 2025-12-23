@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MessageSquare } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const Accordion = AccordionPrimitive.Root;
@@ -13,7 +14,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
-    className={cn("border-b", className)}
+    className={cn("border-b last:border-b-0", className)}
     {...props}
   />
 ));
@@ -23,18 +24,19 @@ interface ProposalTriggerProps extends React.ComponentPropsWithoutRef<typeof Acc
   upvotes: number;
   downvotes: number;
   maxPossibleVotes?: number; // Optional: total users or a fixed max to scale bars
+  commentCount?: number;
+  createdAt?: Date | null;
 }
 
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   ProposalTriggerProps
->(({ className, children, upvotes, downvotes, maxPossibleVotes, ...props }, ref) => {
+>(({ className, children, upvotes, downvotes, commentCount = 0, createdAt, maxPossibleVotes, ...props }, ref) => {
   // Logic for the bar chart background
   // Center is 50%.
   // We scale the bars relative to maxPossibleVotes or just a reasonable scale.
-  const total = upvotes + downvotes;
   const scale = maxPossibleVotes || Math.max(upvotes, downvotes, 1);
-  
+
   const greenWidth = (upvotes / scale) * 50; // Max 50% of the total width
   const redWidth = (downvotes / scale) * 50;   // Max 50% of the total width
 
@@ -57,7 +59,7 @@ const AccordionTrigger = React.forwardRef<
       <AccordionPrimitive.Trigger
         ref={ref}
         className={cn(
-          "flex flex-1 items-center justify-between py-4 px-4 font-semibold transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 [&[data-state=open]>svg]:rotate-180 text-slate-900 dark:text-slate-100",
+          "group flex flex-1 items-center justify-between gap-4 py-3 px-4 font-semibold transition-all hover:bg-secondary/60 dark:hover:bg-slate-800/60 [&[data-state=open]>svg]:rotate-180 text-slate-900 dark:text-slate-100 rounded-2xl",
           className
         )}
         style={backgroundStyle}
@@ -65,15 +67,30 @@ const AccordionTrigger = React.forwardRef<
       >
         <div className="flex items-center gap-4 w-full">
           <span className={cn(
-            "text-sm font-bold min-w-[3.5rem] text-center px-2 py-1 rounded",
-            upvotes - downvotes > 0 ? "text-green-600 dark:text-green-400" : 
-            upvotes - downvotes < 0 ? "text-red-600 dark:text-red-400" : "text-slate-500"
+            "text-sm font-bold min-w-[3.5rem] text-center px-2 py-1 rounded-full bg-white/70 dark:bg-slate-900/50 shadow-sm",
+            upvotes - downvotes > 0 ? "text-green-600 dark:text-green-400" :
+              upvotes - downvotes < 0 ? "text-red-600 dark:text-red-400" : "text-slate-600"
           )}>
             {upvotes - downvotes > 0 ? `+${upvotes - downvotes}` : upvotes - downvotes}
           </span>
-          <span className="flex-1 text-left">{children}</span>
+          <div className="flex-1 text-left">
+            <span className="block text-base font-semibold leading-tight">
+              {children}
+            </span>
+            <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+              {createdAt && (
+                <span>Added {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}</span>
+              )}
+            </div>
+          </div>
         </div>
-        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 text-slate-400" />
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {commentCount}
+          </span>
+          <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 text-slate-400 group-hover:text-foreground" />
+        </div>
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );
@@ -89,7 +106,7 @@ const AccordionContent = React.forwardRef<
     className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
     {...props}
   >
-    <div className={cn("pb-4 pt-0 px-4", className)}>{children}</div>
+    <div className={cn("pb-3 pt-0 px-3", className)}>{children}</div>
   </AccordionPrimitive.Content>
 ));
 AccordionContent.displayName = AccordionPrimitive.Content.displayName;

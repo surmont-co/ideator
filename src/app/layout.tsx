@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,8 +24,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const localePromise = getRequestLocale();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -34,9 +36,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <LocaleWrapper localePromise={localePromise}>{children}</LocaleWrapper>
         </ThemeProvider>
       </body>
     </html>
   );
+}
+
+// Server component to await locale and set lang attribute correctly
+async function LocaleWrapper({ children, localePromise }: { children: React.ReactNode; localePromise: Promise<string> }) {
+  const locale = await localePromise;
+  return <div lang={locale}>{children}</div>;
 }

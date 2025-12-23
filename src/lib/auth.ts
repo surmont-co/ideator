@@ -1,57 +1,70 @@
-import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-const secretKey = process.env.WORKOS_COOKIE_PASSWORD || 'secret-key-must-be-at-least-32-chars-long';
+interface SessionUser {
+  id?: string | null;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  profilePictureUrl?: string | null;
+}
+
+type SessionPayload = JWTPayload & {
+  user?: SessionUser;
+  expires?: number;
+};
+
+const secretKey = process.env.WORKOS_COOKIE_PASSWORD || "secret-key-must-be-at-least-32-chars-long";
 const key = new TextEncoder().encode(secretKey);
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: SessionPayload): Promise<string> {
   return await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime('1 week')
+    .setExpirationTime("1 week")
     .sign(key);
 }
 
-export async function decrypt(input: string): Promise<any> {
+export async function decrypt(input: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(input, key, {
-      algorithms: ['HS256'],
+      algorithms: ["HS256"],
     });
-    return payload;
-  } catch (error) {
+    return payload as SessionPayload;
+  } catch {
     return null;
   }
 }
 
-export async function getSession() {
+export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
-  const session = cookieStore.get('session')?.value;
+  const session = cookieStore.get("session")?.value;
   if (!session) return null;
   return await decrypt(session);
 }
 
-export async function getUser() {
+export async function getUser(): Promise<SessionUser | undefined> {
   const session = await getSession();
   return session?.user;
 }
 
-export async function login(user: any) {
+export async function login(user: SessionUser) {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
-  const session = await encrypt({ user, expires });
+  const session = await encrypt({ user, expires: expires.getTime() });
   const cookieStore = await cookies();
 
-  cookieStore.set('session', session, {
+  cookieStore.set("session", session, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production",
     expires,
-    sameSite: 'lax',
-    path: '/',
+    sameSite: "lax",
+    path: "/",
   });
 }
 
 export async function logout() {
   const cookieStore = await cookies();
-  cookieStore.delete('session');
-  redirect('/');
+  cookieStore.delete("session");
+  redirect("/");
 }

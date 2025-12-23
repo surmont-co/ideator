@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ideator
 
-## Getting Started
+Next.js App Router project for democratic prioritization of proposals with AI-assisted summaries, i18n (EN/RO), and WorkOS auth.
 
-First, run the development server:
+## Quickstart
+1) Install deps: `npm install`
+2) Env vars: copy `.env.local` and fill:
+   - `WORKOS_CLIENT_ID`, `WORKOS_SECRET_KEY`, `WORKOS_API_KEY`, `WORKOS_REDIRECT_URI`, `WORKOS_COOKIE_PASSWORD`
+   - `DATABASE_URL` (defaults to `database.sqlite`)
+   - `GEMINI_API_KEY` (required for AI summaries)
+   - `LOCALE` (`en` or `ro`, default `en`)
+3) DB: run the SQL migrations in `drizzle/` (`0000_*.sql`, `0001_add_summaries.sql`, `0002_add_users_table_and_links.sql`, `0003_add_author_columns.sql`) against your SQLite file. Example: `sqlite3 database.sqlite < drizzle/0000_flippant_zemo.sql` then apply the subsequent files in order.
+4) Dev server: `npm run dev` (http://localhost:3000)
+5) Lint: `npm run lint`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
+- WorkOS authentication protects all app routes.
+- EN/RO translations with header dropdown locale selector; default from `LOCALE` or cookie.
+- AI summaries via Gemini for projects/proposals (fallback to trimmed description if unavailable).
+- User records stored in `users` table; projects/proposals/comments reference user_id and legacy author fields.
+- Dashboard cards are fully clickable to project details; proposals support Markdown titles/descriptions and localized UI copy.
+- Discussion sheet with hover timestamps and accessible overlay.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Testing
+- Lint: `npm run lint`
+- Playwright (if configured locally): `npx playwright test`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment Notes
+- Ensure `.env.local` is present in the runtime with Gemini and WorkOS keys.
+- Apply Drizzle SQL migrations to your target database before starting the server.

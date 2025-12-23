@@ -1,5 +1,5 @@
 {
-  "version": "7",
+  "version": "9",
   "dialect": "sqlite",
   "entries": [
     {
@@ -7,6 +7,27 @@
       "version": "6",
       "when": 1766475804939,
       "tag": "0000_flippant_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767000000000,
+      "tag": "0001_add_summaries",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "8",
+      "when": 1767000001000,
+      "tag": "0002_add_users_table_and_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "9",
+      "when": 1767000002000,
+      "tag": "0003_add_author_columns",
       "breakpoints": true
     }
   ]
