@@ -50,10 +50,11 @@ export async function getUser(): Promise<SessionUser | undefined> {
   return session?.user;
 }
 
-export async function login(user: SessionUser) {
+export async function login(user: SessionUser, domainOverride?: string) {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
   const session = await encrypt({ user, expires: expires.getTime() });
   const cookieStore = await cookies();
+  const domain = domainOverride ?? cookieDomain;
 
   cookieStore.set("session", session, {
     httpOnly: true,
@@ -61,7 +62,7 @@ export async function login(user: SessionUser) {
     expires,
     sameSite: "lax",
     path: "/",
-    ...(cookieDomain ? { domain: cookieDomain } : {}),
+    ...(domain ? { domain } : {}),
   });
 }
 
