@@ -16,6 +16,7 @@ type SessionPayload = JWTPayload & {
 };
 
 const secretKey = process.env.WORKOS_COOKIE_PASSWORD || "secret-key-must-be-at-least-32-chars-long";
+const cookieDomain = process.env.SESSION_COOKIE_DOMAIN;
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: SessionPayload): Promise<string> {
@@ -60,11 +61,15 @@ export async function login(user: SessionUser) {
     expires,
     sameSite: "lax",
     path: "/",
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
   });
 }
 
 export async function logout() {
   const cookieStore = await cookies();
-  cookieStore.delete("session");
+  cookieStore.delete("session", {
+    path: "/",
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+  });
   redirect("/");
 }
