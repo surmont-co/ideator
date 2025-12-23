@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 - 2024-12-26
+
+### Changed
+- Dashboard cards now have a single, icon-only stat row anchored to the bottom with hover color + tooltips; status pills were removed and closed projects are indicated via a subtle gray card background.
+- Removed the per-card footer link for a cleaner layout and tightened stat sizing/spacing to reduce visual noise.
+- Dashboard metrics stay in sync after proposals, votes, or comments thanks to added revalidation hooks.
+- Consolidated migrations into one `0000_full_schema.sql` and rebuilt the local SQLite file from the unified schema.
+
 ## 0.3.0 - 2024-12-24
 
 ### Added
@@ -28,6 +36,15 @@
 
 ### Fixed
 - Regex fallback pentru parsarea JSON-ului OpenAI din similaritate (map obiect) și propagarea userVote către modal.
+
+## 0.3.2 - 2024-12-24
+
+### Added
+- Dashboard-ul afișează statistici per proiect (propuneri, voturi pro/contra, comentarii) în carduri.
+
+### Changed
+- CTA pe carduri este „Contribuie...” pentru proiecte active și „Detalii...” pentru proiecte închise.
+- Stat-urile sunt prezentate compact cu iconițe (Up/Down/Comments) și fundal discret.
 
 ## 0.2.0 - 2024-12-23
 

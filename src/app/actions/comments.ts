@@ -54,6 +54,7 @@ export async function addComment(prevState: CommentActionState | null, formData:
         if (projectId) {
             revalidatePath(`/projects/${projectId}`);
         }
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (error) {
         console.error("Failed to add comment:", error);

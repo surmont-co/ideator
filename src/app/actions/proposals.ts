@@ -92,6 +92,7 @@ export async function createProposal(prevState: ProposalActionState | null, form
         });
 
         revalidatePath(`/projects/${projectId}`);
+        revalidatePath("/dashboard");
     } catch (error) {
         console.error("Failed to create proposal:", error);
         return { error: "Database error: Failed to create proposal" };
@@ -121,6 +122,7 @@ export async function castVote(proposalId: string, value: number, projectId: str
             });
 
         revalidatePath(`/projects/${projectId}`);
+        revalidatePath("/dashboard");
         return { success: true };
     } catch (error) {
         console.error("Failed to vote:", error);
