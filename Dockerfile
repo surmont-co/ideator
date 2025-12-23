@@ -4,8 +4,11 @@ RUN npm install -g npm@${NPM_VERSION}
 WORKDIR /app
 
 FROM base AS deps
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN npm ci
 
 FROM deps AS build
 COPY . .
