@@ -38,6 +38,7 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.due": "Due {label}",
         "project.showDetails": "View details",
         "project.hideDetails": "Hide details",
+        "project.regenerateSummary": "Regenerate summary",
 
         "proposalForm.title": "Title (one-line definition) *",
         "proposalForm.description": "Description (supports Markdown)",
@@ -106,6 +107,7 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.due": "Expiră {label}",
         "project.showDetails": "Vezi detalii",
         "project.hideDetails": "Ascunde detalii",
+        "project.regenerateSummary": "Regenerează sumarul",
 
         "proposalForm.title": "Titlu (definiție pe scurt) *",
         "proposalForm.description": "Descriere (suport Markdown)",

@@ -7,11 +7,16 @@ import { projects, users } from "@/db/schema";
 import { getUser } from "@/lib/auth";
 import { z } from "zod";
 import { generateProjectSummary } from "@/lib/project-summary";
+import { eq } from "drizzle-orm";
 
 export type CreateProjectState = {
     error?: string;
     issues?: Record<string, string[]>;
 } | null;
+export type RegenerateSummaryState = {
+    error?: string;
+    success?: boolean;
+};
 
 const createProjectSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
@@ -87,4 +92,33 @@ export async function createProject(prevState: CreateProjectState, formData: For
     }
 
     redirect("/dashboard");
+}
+
+export async function regenerateProjectSummary(projectId: string): Promise<RegenerateSummaryState> {
+    const user = await getUser();
+    if (!user) {
+        return { error: "You must be logged in to regenerate the summary" };
+    }
+
+    const project = await db.query.projects.findFirst({
+        where: eq(projects.id, projectId),
+    });
+
+    if (!project) {
+        return { error: "Project not found" };
+    }
+
+    const userId = user.id ?? user.email;
+    const isOwner = (project.userId && project.userId === userId) || (!project.userId && project.authorId === user.email);
+
+    if (!isOwner) {
+        return { error: "You are not authorized to regenerate this summary" };
+    }
+
+    const generated = await generateProjectSummary(projectId, { force: true });
+    if (!generated) {
+        return { error: "Failed to regenerate summary" };
+    }
+
+    return { success: true };
 }

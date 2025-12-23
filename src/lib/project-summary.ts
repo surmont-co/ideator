@@ -7,13 +7,17 @@ import { fallbackSummary, generateSummaryFromText } from "@/lib/ai";
 const SUMMARY_WORD_LIMIT = 48;
 const SUMMARY_CHAR_LIMIT = 320;
 
-export async function generateProjectSummary(projectId: string) {
+type SummaryOptions = {
+  force?: boolean;
+};
+
+export async function generateProjectSummary(projectId: string, options?: SummaryOptions) {
   const project = await db.query.projects.findFirst({
     where: eq(projects.id, projectId),
   });
 
   if (!project) return false;
-  if (project.summary) return false;
+  if (project.summary && !options?.force) return false;
 
   const promptSource = [
     "Summarize as a concise explanation of the project's purpose and intended impact.",

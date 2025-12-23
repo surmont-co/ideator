@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTranslations } from "@/lib/i18n-server";
 import { fallbackSummary } from "@/lib/ai";
 import { SuggestProposalsButton } from "@/components/suggest-proposals";
+import { RegenerateSummaryButton } from "@/components/regenerate-summary-button";
 
 export default async function ProjectPage({
     params,
@@ -136,6 +137,8 @@ export default async function ProjectPage({
     };
     const summaryContent = project.summary || fallbackSummary(project.description || project.title, 240) || "";
     const fullContent = project.description || summaryContent;
+    const currentUserId = user.id ?? user.email;
+    const isOwner = (project.userId && project.userId === currentUserId) || (!project.userId && project.authorId === user.email);
 
     return (
         <div className="space-y-8 pb-12">
@@ -188,13 +191,21 @@ export default async function ProjectPage({
                             </span>
                             </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <ProjectDescriptionToggle
+                                summary={summaryContent}
+                                full={fullContent}
+                                showLabel={t("project.showDetails")}
+                                hideLabel={t("project.hideDetails")}
+                                actions={isOwner ? (
+                                    <RegenerateSummaryButton
+                                        projectId={project.id}
+                                        label={t("project.regenerateSummary")}
+                                    />
+                                ) : undefined}
+                            />
+                        </div>
                     </div>
-                    <ProjectDescriptionToggle
-                        summary={summaryContent}
-                        full={fullContent}
-                        showLabel={t("project.showDetails")}
-                        hideLabel={t("project.hideDetails")}
-                    />
                 </CardContent>
             </Card>
 

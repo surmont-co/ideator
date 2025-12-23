@@ -9,9 +9,10 @@ type Props = {
     full: string;
     showLabel: string;
     hideLabel: string;
+    actions?: React.ReactNode;
 };
 
-export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel }: Props) {
+export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel, actions }: Props) {
     const [expanded, setExpanded] = useState(false);
     const [shouldGlow, setShouldGlow] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
@@ -36,7 +37,8 @@ export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel }
                         className="max-w-none leading-relaxed text-slate-700 dark:text-slate-200"
                     />
                 </div>
-                <div className="absolute right-4 bottom-3">
+                <div className="absolute right-4 bottom-3 flex items-center gap-2">
+                    {actions}
                     <Button
                         variant="outline"
                         size="sm"
