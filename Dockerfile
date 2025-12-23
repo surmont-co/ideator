@@ -14,6 +14,7 @@ RUN npm ci
 FROM deps AS build
 COPY . .
 ENV NODE_ENV=production
+RUN mkdir -p /app/data
 RUN npm run build
 
 FROM build AS db
