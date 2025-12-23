@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 - 2024-12-24
+
+### Added
+- AI similarity checks now call Gemini with OpenAI fallback, throttle misbehaving providers for 15 minutes, and log requests/responses in dev.
+- Similarity modal shows AI-written explanations with percent-based background; vote buttons on hover allow up/downvoting existing proposals directly.
+- Proposal summaries are generated server-side on submit via AI (locale-aware); client no longer makes per-keystroke summary calls.
+- README rewritten for clearer purpose, setup, and commands.
+- Similarity parsing handles JSON maps/regex fallback to avoid empty matches.
+
+### Changed
+- If no positive similarity scores are returned, the new proposal submits immediately without showing the modal; zero-similarity items are hidden.
+- Modal layout tweaks: centered, wider width cap, hoverable vote buttons overlaying text, and percent-only background bar.
+- Deadline formatting uses locale-aware months (RO diacritics) and time formats (24h RO, 12h EN).
+
+### Fixed
+- Resilience against LLM rate limits with provider failover; better logging for debugging AI output quality.
+
 ## 0.2.0 - 2024-12-23
 
 ### Added

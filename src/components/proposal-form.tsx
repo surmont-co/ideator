@@ -102,15 +102,24 @@ export function ProposalForm({
                 // eslint-disable-next-line no-console
                 console.info("[similarity_client_response]", data);
             }
-            const matches = (data.matches || []).map((m) => {
-                const ref = existingProposals.find((p) => p.id === m.id);
-                return {
-                    id: m.id,
-                    title: ref?.title || m.id,
-                    similarity: m.similarity,
-                    explanation: m.explanation || "",
-                };
-            }).sort((a, b) => b.similarity - a.similarity);
+            const matches = (data.matches || [])
+                .map((m) => {
+                    const ref = existingProposals.find((p) => p.id === m.id);
+                    return {
+                        id: m.id,
+                        title: ref?.title || m.id,
+                        similarity: m.similarity,
+                        explanation: m.explanation || "",
+                    };
+                })
+                .filter((m) => m.similarity > 0)
+                .sort((a, b) => b.similarity - a.similarity);
+
+            if (matches.length === 0) {
+                setBypassSimilarity(true);
+                formRef.current?.requestSubmit();
+                return;
+            }
 
             setSimilarMatches(matches);
             setShowSimilarModal(true);
@@ -211,9 +220,9 @@ export function ProposalForm({
                     )}
 
                     {showSimilarityWarning && showSimilarModal && (
-                        <div className="absolute inset-0 z-20 flex items-center justify-center">
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSimilarModal(false)} />
-                            <div className="relative z-30 w-full max-w-2xl rounded-2xl border border-border bg-card shadow-xl p-6 space-y-4">
+                        <div className="fixed inset-0 z-20 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSimilarModal(false)} />
+                            <div className="relative z-30 w-[min(90vw,720px)] rounded-2xl border border-border bg-card shadow-xl p-6 space-y-4">
                                 <div className="space-y-2">
                                     <h3 className="text-lg font-semibold">{t("proposalForm.similarTitle")}</h3>
                                     <p className="text-sm text-muted-foreground">{t("proposalForm.similarSubtitle")}</p>
@@ -225,7 +234,7 @@ export function ProposalForm({
                                             <div
                                                 key={match.id}
                                                 className={cn(
-                                                    "group rounded-lg border border-border/70 bg-muted/40 p-3 transition hover:border-primary/60 hover:bg-primary/5 relative overflow-hidden",
+                                                    "group relative rounded-lg border border-border/70 bg-muted/40 p-3 transition hover:border-primary/60 hover:bg-primary/5 overflow-hidden",
                                                     isVotingSimilar && "opacity-70",
                                                 )}
                                             >
@@ -233,25 +242,24 @@ export function ProposalForm({
                                                     className="absolute inset-0 opacity-30 pointer-events-none"
                                                     aria-hidden
                                                     style={{
-                                                        background: `linear-gradient(90deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.25) ${pct}%, transparent ${pct}%)`,
+                                                        background: `linear-gradient(90deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.25) ${pct}%, transparent ${pct}%)`,
                                                     }}
                                                 />
-                                                <div className="relative flex items-start justify-between gap-3">
-                                                    <div className="space-y-1">
+                                                <div className="relative flex items-start gap-3">
+                                                    <div className="flex-1 space-y-1">
                                                         <div className="font-semibold text-sm">{match.title}</div>
                                                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                                            <span className="font-semibold text-foreground">{pct}%</span>
-                                                            {match.explanation && <span>• {match.explanation}</span>}
+                                                            {match.explanation && <span className="leading-relaxed">{match.explanation}</span>}
                                                         </div>
                                                     </div>
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2">
                                                         <Button
                                                             type="button"
                                                             size="sm"
                                                             variant="secondary"
                                                             onClick={() => handleVoteSimilar(match.id, 1)}
                                                             disabled={isVotingSimilar}
-                                                            className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                            className="h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm cursor-pointer"
                                                         >
                                                             <ThumbsUp className="w-4 h-4" />
                                                             {t("proposalForm.upvote")}
@@ -262,7 +270,7 @@ export function ProposalForm({
                                                             variant="secondary"
                                                             onClick={() => handleVoteSimilar(match.id, -1)}
                                                             disabled={isVotingSimilar}
-                                                            className="h-10 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm"
+                                                            className="h-9 px-3 gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm cursor-pointer"
                                                         >
                                                             <ThumbsDown className="w-4 h-4" />
                                                             {t("proposalForm.downvote")}

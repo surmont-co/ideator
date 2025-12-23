@@ -12,6 +12,13 @@ function extractJson(text: string): SimilarResult[] {
   try {
     const direct = JSON.parse(text);
     if (Array.isArray(direct)) return direct as SimilarResult[];
+    if (direct && typeof direct === "object") {
+      return Object.entries(direct).map(([id, val]) => ({
+        id,
+        similarity: (val as any)?.similarity,
+        explanation: (val as any)?.explanation,
+      }));
+    }
   } catch {
     // ignore
   }
@@ -24,7 +31,33 @@ function extractJson(text: string): SimilarResult[] {
       return [];
     }
   }
-  return [];
+  const objMatch = text.match(/\{[\s\S]*\}/);
+  if (objMatch) {
+    try {
+      const parsed = JSON.parse(objMatch[0]);
+      if (parsed && typeof parsed === "object") {
+        return Object.entries(parsed).map(([id, val]) => ({
+          id,
+          similarity: (val as any)?.similarity,
+          explanation: (val as any)?.explanation,
+        }));
+      }
+    } catch {
+      // ignore and fall through
+    }
+  }
+  // Regex extraction fallback when JSON is malformed/truncated
+  const regex = /"(?<id>[^"]+)":\s*\{\s*"similarity"\s*:\s*(?<sim>\d+(?:\.\d+)?)[^}]*?"explanation"\s*:\s*"(?<exp>[^"]*)"/g;
+  const results: SimilarResult[] = [];
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    results.push({
+      id: m.groups?.id ?? "",
+      similarity: Number(m.groups?.sim ?? 0),
+      explanation: m.groups?.exp ?? "",
+    });
+  }
+  return results;
 }
 
 function normalize(text: string) {
