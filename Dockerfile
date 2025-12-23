@@ -1,6 +1,7 @@
 FROM node:25.2.1-bookworm-slim AS base
 ARG NPM_VERSION=11.6.2
 RUN npm install -g npm@${NPM_VERSION}
+ENV DATABASE_URL=/app/data/database.sqlite
 WORKDIR /app
 
 FROM base AS deps
@@ -20,8 +21,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends sqlite3 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 RUN set -eux; \
+    mkdir -p /app/data; \
     for f in drizzle/*.sql; do \
-        sqlite3 /app/database.sqlite < "$f"; \
+        sqlite3 /app/data/database.sqlite < "$f"; \
     done
 
 FROM base AS runner
@@ -31,7 +33,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/package.json ./package.json
-COPY --from=db /app/database.sqlite ./database.sqlite
+COPY --from=db /app/data/database.sqlite ./data/database.sqlite
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

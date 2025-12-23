@@ -7,8 +7,9 @@ services:
       - .env.local
     environment:
       NODE_ENV: production
+      DATABASE_URL: /app/data/database.sqlite
     volumes:
-      - database_data:/app/database.sqlite
+      - database_data:/app/data
     restart: unless-stopped
 volumes:
   database_data:
