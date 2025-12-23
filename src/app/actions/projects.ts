@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { projects, users } from "@/db/schema";
 import { getUser } from "@/lib/auth";
 import { z } from "zod";
-import { fallbackSummary, generateSummaryFromText } from "@/lib/ai";
+import { generateProjectSummary } from "@/lib/project-summary";
 
 type CreateProjectState = {
     error?: string;
@@ -61,19 +61,20 @@ export async function createProject(prevState: CreateProjectState | null, formDa
             },
         });
 
-        const summary =
-            (await generateSummaryFromText(`${title}\n\n${description ?? ""}`, 60)) ??
-            fallbackSummary(description || title, 240);
-
-        await db.insert(projects).values({
+        const [{ id: projectId }] = await db.insert(projects).values({
             title,
             description: description || null,
-            summary: summary || null,
+            summary: null,
             deadline: new Date(deadline),
             authorId: user.email,
             authorAvatarUrl: user.profilePictureUrl || null,
             userId,
         }).returning({ id: projects.id });
+
+        // Kick off async summary generation without blocking user navigation
+        void generateProjectSummary(projectId).catch((err) => {
+            console.error("Project summary generation failed", err);
+        });
 
         // Assuming we want to redirect to the projects list or the new project
         // For now, redirect to dashboard or project list if exists.

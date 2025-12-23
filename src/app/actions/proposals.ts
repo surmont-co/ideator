@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { proposals, votes, users } from "@/db/schema";
 import { getUser } from "@/lib/auth";
 import { z } from "zod";
-import { fallbackSummary, generateSummaryFromText } from "@/lib/ai";
+import { fallbackSummary } from "@/lib/ai";
 
 type ProposalActionState = {
     error?: string;
@@ -18,6 +18,7 @@ const createProposalSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
     description: z.string().optional(),
     initialVote: z.enum(["1", "-1"]),
+    summary: z.string().optional(),
 });
 
 export async function createProposal(prevState: ProposalActionState | null, formData: FormData): Promise<ProposalActionState> {
@@ -31,6 +32,7 @@ export async function createProposal(prevState: ProposalActionState | null, form
         title: formData.get("title"),
         description: formData.get("description"),
         initialVote: formData.get("initialVote"),
+        summary: formData.get("summary"),
     });
 
     if (!validatedFields.success) {
@@ -40,7 +42,7 @@ export async function createProposal(prevState: ProposalActionState | null, form
         };
     }
 
-    const { projectId, title, description, initialVote } = validatedFields.data;
+    const { projectId, title, description, initialVote, summary } = validatedFields.data;
 
     try {
         const userId = user.id ?? user.email;
@@ -61,10 +63,6 @@ export async function createProposal(prevState: ProposalActionState | null, form
             },
         });
 
-        const summary =
-            (await generateSummaryFromText(`${title}\n\n${description ?? ""}`, 50)) ??
-            fallbackSummary(description || title, 220);
-
         // 1. Create Proposal
         const [newProposal] = await db
             .insert(proposals)
@@ -74,7 +72,7 @@ export async function createProposal(prevState: ProposalActionState | null, form
                 authorAvatarUrl: user.profilePictureUrl || null,
                 title,
                 description: description || null,
-                summary: summary || null,
+                summary: (summary?.toString().trim() || fallbackSummary(description || title, 220)) ?? null,
                 isNegativeInitiative: false, // Defaulting for now
                 userId,
             })

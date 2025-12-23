@@ -8,6 +8,9 @@
 - User persistence table linking projects, proposals, and comments to user records; automatic upsert on create/comment actions.
 - Full-card navigation on the dashboard for quick access to project details.
 - UI enhancements: clickable proposal cards with Markdown titles, improved discussion sheet styling, and proposal form redesign aligned with card actions.
+- Project proposal form now performs live similarity checks (Jaccard, 75% threshold) against existing proposals on the same project, gating submission with a confirmation modal that lists close matches.
+- Proposal summaries are generated asynchronously while typing and submitted with the form; submit is disabled during background checks/summarization.
+- Project details now pass existing proposals to the form, and summary toggles retain glow state per page load; deadline formatting respects locale (RO/EN) with proper month casing/diacritics.
 
 ### Changed
 - Dashboard, project details, and proposal lists now prefer AI summaries over full descriptions.

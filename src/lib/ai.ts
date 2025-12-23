@@ -1,21 +1,31 @@
-const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const defaultLocale = process.env.LOCALE || "en";
 
-const systemPrompt = (maxWords: number) =>
-    `Summarize the following project or proposal in at most ${maxWords} words. Keep it concise, neutral, and informative. Avoid markdown headings, emojis, or bullet lists. Return a single paragraph of plain text in the locale "${defaultLocale}".`;
+const systemPrompt = (maxWords: number, maxChars?: number) => {
+    const charConstraint = maxChars ? ` and at most ${maxChars} characters` : "";
+    return [
+        `You are summarizing a project or proposal.`,
+        `Always respond in the "${defaultLocale}" language (target locale), regardless of the source language.`,
+        `Assume the reader already sees the project title separately; do not repeat or rephrase the title or proper names unless essential to meaning.`,
+        `Write a single crisp sentence with no bullets or headings, removing redundancy and filler.`,
+        `Keep it easy to read and remember.`,
+        `Use at most ${maxWords} words${charConstraint}.`,
+    ].join(" ");
+};
 
 type GeminiPart = { text?: string };
 type GeminiCandidate = { content?: { parts?: GeminiPart[] } };
 
-export async function generateSummaryFromText(input: string, maxWords = 60): Promise<string | null> {
+export async function generateSummaryFromText(input: string, maxWords = 60, maxChars?: number): Promise<string | null> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || !input.trim()) {
         return null;
     }
 
     try {
-        const prompt = `${systemPrompt(maxWords)}\n\n${input}`;
+        const prompt = `${systemPrompt(maxWords, maxChars)}\n\n${input}`;
         const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
             method: "POST",
             headers: {
@@ -43,6 +53,10 @@ export async function generateSummaryFromText(input: string, maxWords = 60): Pro
 
         if (!text) {
             return null;
+        }
+
+        if (maxChars) {
+            return text.slice(0, maxChars);
         }
 
         return text.slice(0, 480);

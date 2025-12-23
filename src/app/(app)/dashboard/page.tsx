@@ -19,6 +19,13 @@ import { Plus } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { getTranslations } from "@/lib/i18n-server";
 
+const truncatePreview = (content: string | null, maxChars = 100) => {
+  if (!content) return "";
+  const trimmed = content.trim();
+  if (trimmed.length <= maxChars) return trimmed;
+  return `${trimmed.slice(0, maxChars - 1).trimEnd()}…`;
+};
+
 export default async function DashboardPage() {
   const user = await getUser();
   const { t } = await getTranslations();
@@ -63,6 +70,7 @@ export default async function DashboardPage() {
         <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
           {allProjects.map((project) => {
             const isPast = new Date(project.deadline) < new Date();
+            const previewSource = project.summary || truncatePreview(project.description || project.title, 100) || "No description provided.";
 
             // ...
 
@@ -85,7 +93,7 @@ export default async function DashboardPage() {
                 </CardHeader>
                 <CardContent className="flex-1 pt-0">
                   <div className="text-sm text-slate-700 dark:text-slate-200 line-clamp-4 overflow-hidden leading-relaxed">
-                    <MarkdownRenderer content={project.summary || project.description || "No description provided."} className="prose-sm dark:prose-invert" />
+                    <MarkdownRenderer content={previewSource} className="prose-sm dark:prose-invert" />
                   </div>
                 </CardContent>
                 <CardFooter className="pt-0">

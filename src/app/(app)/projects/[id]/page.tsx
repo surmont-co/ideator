@@ -5,14 +5,17 @@ import { db } from "@/db";
 import { projects, proposals, votes, comments } from "@/db/schema";
 import { eq, sql, desc, asc } from "drizzle-orm";
 import { format, formatDistanceToNow } from "date-fns";
+import { enUS, ro as roLocale } from "date-fns/locale";
 import { ChevronLeft, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { ProjectDescriptionToggle } from "@/components/project-description-toggle";
 import { ProposalForm } from "@/components/proposal-form";
 import { ProposalList } from "@/components/proposal-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTranslations } from "@/lib/i18n-server";
+import { fallbackSummary } from "@/lib/ai";
 
 export default async function ProjectPage({
     params,
@@ -94,7 +97,33 @@ export default async function ProjectPage({
         // Ensure proposalId is present
     }));
 
+    const formatLocale = locale === "ro" ? roLocale : enUS;
+    const dateFormat = locale === "ro" ? "d MMMM yyyy 'la' HH:mm" : "d MMMM yyyy 'at' h:mm a";
     const dueLabel = formatDistanceToNow(new Date(project.deadline), { addSuffix: true });
+    const roMonthMap: Record<string, string> = {
+        ianuarie: "Ianuarie",
+        februarie: "Februarie",
+        martie: "Martie",
+        aprilie: "Aprilie",
+        mai: "Mai",
+        iunie: "Iunie",
+        iulie: "Iulie",
+        august: "August",
+        septembrie: "Septembrie",
+        octombrie: "Octombrie",
+        noiembrie: "Noiembrie",
+        decembrie: "Decembrie",
+    };
+    const formatDeadline = (date: Date) => {
+        const formatted = format(date, dateFormat, { locale: formatLocale });
+        if (locale !== "ro") return formatted;
+        return formatted.replace(
+            /\b(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\b/,
+            (match) => roMonthMap[match] || match,
+        );
+    };
+    const summaryContent = project.summary || fallbackSummary(project.description || project.title, 240) || "";
+    const fullContent = project.description || summaryContent;
 
     return (
         <div className="space-y-8 pb-12">
@@ -130,14 +159,17 @@ export default async function ProjectPage({
                             </span>
                             <span className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
-                                <span>{format(new Date(project.deadline), "d MMMM yyyy 'la' HH:mm")}</span>
+                                <span>{formatDeadline(new Date(project.deadline))}</span>
                             </span>
                             </div>
                         </div>
                     </div>
-                    <div className="prose dark:prose-invert max-w-none leading-relaxed text-slate-700 dark:text-slate-200">
-                        <MarkdownRenderer content={project.summary || project.description || ""} />
-                    </div>
+                    <ProjectDescriptionToggle
+                        summary={summaryContent}
+                        full={fullContent}
+                        showLabel={t("project.showDetails")}
+                        hideLabel={t("project.hideDetails")}
+                    />
                 </CardContent>
             </Card>
 
@@ -167,7 +199,16 @@ export default async function ProjectPage({
                 </div>
 
                 <div id="proposal-form" className="space-y-4 lg:sticky lg:top-24">
-                    <ProposalForm projectId={project.id} locale={locale} />
+                    <ProposalForm
+                        projectId={project.id}
+                        locale={locale}
+                        existingProposals={formattedProposals.map((p) => ({
+                            id: p.id,
+                            title: p.title,
+                            description: p.description,
+                            summary: p.summary,
+                        }))}
+                    />
                 </div>
             </div>
         </div>

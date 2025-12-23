@@ -27,6 +27,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.proposalsSub": "Open a card to vote, then jump into the discussion.",
         "project.noProposals": "No proposals yet. Be the first to add one!",
         "project.due": "Due {label}",
+        "project.showDetails": "View details",
+        "project.hideDetails": "Hide details",
 
         "proposalForm.title": "Title (one-line definition) *",
         "proposalForm.description": "Description (supports Markdown)",
@@ -34,6 +36,11 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.downvote": "Downvote",
         "proposalForm.submit": "Add Proposal",
         "proposalForm.submitting": "Adding Proposal...",
+        "proposalForm.similarTitle": "Your proposal looks similar to existing ones",
+        "proposalForm.similarSubtitle": "We found proposals on this project that are very close to what you wrote. Review them before adding a new one.",
+        "proposalForm.submitAnyway": "Submit my proposal anyway",
+        "proposalForm.cancel": "Cancel",
+        "proposalForm.summaryPreview": "Preview of your proposal summary",
 
         "proposalList.noDescription": "No description.",
         "proposalList.comments": "Comments",
@@ -61,6 +68,8 @@ const translations: Record<Locale, Record<string, string>> = {
         "project.proposalsSub": "Deschide un card pentru a vota, apoi intră în discuție.",
         "project.noProposals": "Nu există propuneri. Fii primul care adaugă una!",
         "project.due": "Expiră {label}",
+        "project.showDetails": "Vezi detalii",
+        "project.hideDetails": "Ascunde detalii",
 
         "proposalForm.title": "Titlu (definiție pe scurt) *",
         "proposalForm.description": "Descriere (suport Markdown)",
@@ -68,6 +77,11 @@ const translations: Record<Locale, Record<string, string>> = {
         "proposalForm.downvote": "Votează Contra",
         "proposalForm.submit": "Adaugă propunere",
         "proposalForm.submitting": "Se adaugă propunerea...",
+        "proposalForm.similarTitle": "Propunerea ta seamănă cu altele existente",
+        "proposalForm.similarSubtitle": "Am găsit propuneri pe acest proiect foarte apropiate de ce ai scris. Verifică-le înainte să adaugi una nouă.",
+        "proposalForm.submitAnyway": "Adaugă totuși propunerea mea",
+        "proposalForm.cancel": "Renunță",
+        "proposalForm.summaryPreview": "Rezumatul propunerii tale",
 
         "proposalList.noDescription": "Fără descriere.",
         "proposalList.comments": "Comentarii",
