@@ -21,7 +21,6 @@ export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel }
     // Start glow after a short delay; stop it after first click during the page lifetime.
     useEffect(() => {
         if (hasInteracted) {
-            setShouldGlow(false);
             return;
         }
         const timer = window.setTimeout(() => setShouldGlow(true), 2800);
@@ -29,26 +28,29 @@ export function ProjectDescriptionToggle({ summary, full, showLabel, hideLabel }
     }, [hasInteracted]);
 
     return (
-        <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
-            <div className="flex items-center gap-4">
-                <div className="flex-1">
+        <div className="rounded-xl border border-border/60 bg-white/60 dark:bg-slate-900/40 px-4 py-3 relative">
+            <div className="flex items-start">
+                <div className="flex-1 pr-32">
                     <MarkdownRenderer
                         content={content}
                         className="max-w-none leading-relaxed text-slate-700 dark:text-slate-200"
                     />
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={`shrink-0 transition-shadow ${shouldGlow ? "animate-pulse ring-2 ring-orange-400/70 shadow-[0_0_0_4px_rgba(251,146,60,0.15)]" : ""}`}
-                    onClick={() => {
-                        setHasInteracted(true);
-                        setExpanded((prev) => !prev);
-                    }}
-                    aria-expanded={expanded}
-                >
-                    {label}
-                </Button>
+                <div className="absolute right-4 bottom-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className={`shrink-0 transition-shadow ${shouldGlow ? "animate-pulse ring-2 ring-orange-400/70 shadow-[0_0_0_4px_rgba(251,146,60,0.15)]" : ""}`}
+                        onClick={() => {
+                            setHasInteracted(true);
+                            setShouldGlow(false);
+                            setExpanded((prev) => !prev);
+                        }}
+                        aria-expanded={expanded}
+                    >
+                        {label}
+                    </Button>
+                </div>
             </div>
         </div>
     );

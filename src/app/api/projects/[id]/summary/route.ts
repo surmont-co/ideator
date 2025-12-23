@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { generateProjectSummary } from "@/lib/project-summary";
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   if (!id) {
     return NextResponse.json({ ok: false, reason: "missing id" }, { status: 400 });
   }

@@ -9,15 +9,18 @@ type SimilarResult = { id: string; similarity: number; explanation: string };
 type ProjectContext = { title: string; description?: string | null };
 
 function extractJson(text: string): SimilarResult[] {
+  const toResult = (id: string, val: unknown): SimilarResult => {
+    const obj = typeof val === "object" && val !== null ? (val as Record<string, unknown>) : {};
+    const similarity = Number(obj.similarity ?? 0);
+    const explanation = typeof obj.explanation === "string" ? obj.explanation : "";
+    return { id, similarity, explanation };
+  };
+
   try {
     const direct = JSON.parse(text);
     if (Array.isArray(direct)) return direct as SimilarResult[];
     if (direct && typeof direct === "object") {
-      return Object.entries(direct).map(([id, val]) => ({
-        id,
-        similarity: (val as any)?.similarity,
-        explanation: (val as any)?.explanation,
-      }));
+      return Object.entries(direct).map(([id, val]) => toResult(id, val));
     }
   } catch {
     // ignore
@@ -36,11 +39,7 @@ function extractJson(text: string): SimilarResult[] {
     try {
       const parsed = JSON.parse(objMatch[0]);
       if (parsed && typeof parsed === "object") {
-        return Object.entries(parsed).map(([id, val]) => ({
-          id,
-          similarity: (val as any)?.similarity,
-          explanation: (val as any)?.explanation,
-        }));
+        return Object.entries(parsed).map(([id, val]) => toResult(id, val));
       }
     } catch {
       // ignore and fall through

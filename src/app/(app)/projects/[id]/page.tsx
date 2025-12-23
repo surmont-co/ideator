@@ -16,6 +16,7 @@ import { ProposalList } from "@/components/proposal-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTranslations } from "@/lib/i18n-server";
 import { fallbackSummary } from "@/lib/ai";
+import { SuggestProposalsButton } from "@/components/suggest-proposals";
 
 export default async function ProjectPage({
     params,
@@ -103,7 +104,8 @@ export default async function ProjectPage({
     // We want just comments mapped.
     const mappedComments = allComments.map(r => ({
         ...r.comments,
-        createdAt: r.comments.createdAt
+        createdAt: r.comments.createdAt,
+        proposalId: r.comments.proposalId || "",
         // Ensure proposalId is present
     }));
 
@@ -144,9 +146,22 @@ export default async function ProjectPage({
                         {t("project.back")}
                     </Link>
                 </Button>
-                <Button asChild variant="secondary" className="hidden sm:inline-flex">
-                    <Link href="#proposal-form">{t("project.addProposal")}</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <SuggestProposalsButton
+                        projectId={id}
+                        projectTitle={project.title}
+                        projectDescription={project.description || summaryContent || ""}
+                        existing={formattedProposals.map((p) => ({
+                            title: p.title,
+                            description: p.description,
+                            summary: p.summary,
+                        }))}
+                        locale={locale}
+                    />
+                    <Button asChild variant="secondary" className="hidden sm:inline-flex">
+                        <Link href="#proposal-title">{t("project.addProposal")}</Link>
+                    </Button>
+                </div>
             </div>
 
             <Card className="flex flex-col border-border/80 shadow-sm rounded-2xl bg-card">
@@ -190,9 +205,6 @@ export default async function ProjectPage({
                             <h2 className="text-xl font-semibold">{t("project.proposalsTitle")}</h2>
                             <p className="text-sm text-muted-foreground">{t("project.proposalsSub")}</p>
                         </div>
-                        <Button asChild variant="outline" className="h-10 px-3">
-                            <Link href="#proposal-form">{t("project.addProposal")}</Link>
-                        </Button>
                     </div>
                     {formattedProposals.length === 0 ? (
                         <div className="text-center py-10 text-muted-foreground bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed">

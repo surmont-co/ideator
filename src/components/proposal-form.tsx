@@ -56,6 +56,21 @@ export function ProposalForm({
     );
     const formRef = useRef<HTMLFormElement>(null);
     const { t } = getTranslations(locale);
+    const titleRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const focusIfHash = () => {
+            if (typeof window === "undefined") return;
+            if (window.location.hash === "#proposal-title") {
+                titleRef.current?.focus();
+            }
+        };
+        focusIfHash();
+        window.addEventListener("hashchange", focusIfHash);
+        return () => {
+            window.removeEventListener("hashchange", focusIfHash);
+        };
+    }, []);
 
     useEffect(() => {
         if (state?.success) {
@@ -162,7 +177,7 @@ export function ProposalForm({
     return (
         <Card className="border-border/80 shadow-md rounded-2xl bg-card">
             <CardHeader className="pb-4">
-                <CardTitle className="text-xl">Add New Proposal</CardTitle>
+                <CardTitle className="text-xl">{t("proposalForm.submit")}</CardTitle>
             </CardHeader>
             <CardContent>
                 <form ref={formRef} action={action} onSubmit={handleSubmit} className="space-y-5 relative">
@@ -171,7 +186,8 @@ export function ProposalForm({
 
                     <div className="space-y-2">
                         <Input
-                            id="title"
+                            id="proposal-title"
+                            ref={titleRef}
                             name="title"
                             placeholder={t("proposalForm.title")}
                             required

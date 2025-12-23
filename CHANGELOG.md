@@ -8,6 +8,25 @@
 - Dashboard metrics stay in sync after proposals, votes, or comments thanks to added revalidation hooks.
 - Consolidated migrations into one `0000_full_schema.sql` and rebuilt the local SQLite file from the unified schema.
 
+## 0.3.4 - 2024-12-26
+
+### Added
+- AI “Suggest proposals” flow on project pages: generates up to 3 ideas from project + existing proposals, shows hoverable controls, detail sub-modal with Markdown, and bulk adds selected proposals with initial votes.
+
+### Changed
+- Proposal CTA unified to the top button; clicking focuses the title field.
+- Proposal list and suggestion cards use grouped vote/view controls consistent with the similarity modal.
+- Project description glow logic avoids extra renders; localization covers new suggestion strings.
+
+### Fixed
+- Similarity and suggestion parsing tightened (typed JSON handling), and the suggestion modal refreshes data after submit to show new items immediately.
+
+## 0.3.5 - 2024-12-26
+
+### Changed
+- Proposal headers now show up/down vote totals next to the comments badge, keeping the title area cleaner; author avatar remains before the chevron.
+- Proposal detail blocks gained bottom-right summary/detail toggles; description toggle sits in the bottom-right of the project summary card.
+
 ## 0.3.0 - 2024-12-24
 
 ### Added

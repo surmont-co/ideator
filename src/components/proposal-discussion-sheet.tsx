@@ -17,6 +17,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { addComment } from "@/app/actions/comments";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface Comment {
     id: string;
@@ -33,6 +34,8 @@ interface ProposalDiscussionSheetProps {
     comments: Comment[];
     currentUserEmail?: string;
     label?: string;
+    className?: string;
+    icon?: React.ReactNode;
 }
 
 export function ProposalDiscussionSheet({
@@ -42,6 +45,8 @@ export function ProposalDiscussionSheet({
     comments,
     currentUserEmail,
     label,
+    className,
+    icon,
 }: ProposalDiscussionSheetProps) {
     const [state, action, isPending] = useActionState(addComment, null);
     const formRef = useRef<HTMLFormElement>(null);
@@ -59,9 +64,12 @@ export function ProposalDiscussionSheet({
                 <Button
                     variant="secondary"
                     size="sm"
-                    className="gap-2 h-9 px-3 border border-border/70 bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border-border cursor-pointer"
+                    className={cn(
+                        "gap-2 h-9 px-3 border border-border/70 bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border-border cursor-pointer",
+                        className,
+                    )}
                 >
-                    <MessageSquare className="w-4 h-4" />
+                    {icon || <MessageSquare className="w-4 h-4" />}
                     <span className="hidden sm:inline">{label || "Comments"}</span>
                     <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-full text-xs font-semibold text-foreground shadow-sm">{comments.length}</span>
                 </Button>
