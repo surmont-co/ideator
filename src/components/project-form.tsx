@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import { createProject } from "@/app/actions/projects";
+import { createProject, type CreateProjectState } from "@/app/actions/projects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ProjectForm() {
-    const [state, action, isPending] = useActionState(createProject, null);
+    const [state, action, isPending] = useActionState<CreateProjectState, FormData>(createProject, null);
 
     return (
         <form action={action} className="space-y-6 max-w-2xl mx-auto p-6 border border-border/80 rounded-2xl bg-card text-card-foreground shadow-md">

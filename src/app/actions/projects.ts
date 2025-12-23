@@ -8,10 +8,10 @@ import { getUser } from "@/lib/auth";
 import { z } from "zod";
 import { generateProjectSummary } from "@/lib/project-summary";
 
-type CreateProjectState = {
+export type CreateProjectState = {
     error?: string;
     issues?: Record<string, string[]>;
-};
+} | null;
 
 const createProjectSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
@@ -21,7 +21,7 @@ const createProjectSchema = z.object({
     }),
 });
 
-export async function createProject(prevState: CreateProjectState | null, formData: FormData): Promise<CreateProjectState | void> {
+export async function createProject(prevState: CreateProjectState, formData: FormData): Promise<CreateProjectState> {
     const user = await getUser();
     if (!user) {
         return { error: "You must be logged in to create a project" };
