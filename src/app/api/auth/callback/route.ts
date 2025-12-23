@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
     });
 
     // Salvăm user-ul în sesiune (cookie criptat)
-    const host = req.headers.get("host");
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const host = forwardedHost ?? req.headers.get("host");
     const domainFromHost = host ? host.split(":")[0] : undefined;
+
     await login(user, process.env.SESSION_COOKIE_DOMAIN ?? domainFromHost);
   } catch (error) {
     console.error("WorkOS Auth Error:", error);
