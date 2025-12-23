@@ -1,4 +1,6 @@
 FROM node:25.2.1-bookworm-slim AS base
+ARG NPM_VERSION=11.6.2
+RUN npm install -g npm@${NPM_VERSION}
 WORKDIR /app
 
 FROM base AS deps
