@@ -33,3 +33,4 @@ Platformă Next.js (App Router) pentru inițiative de echipă: proiecte, propune
 - Asigură `.env.local` cu cheile WorkOS și Gemini pe mediu.
 - Aplică migrările SQL pe baza țintă înainte de rulare.
 - Setează `LOCALE` pentru limba implicită a UI și a sumarizării AI.
+- Docker: fișierele sunt în `.docker/` (`Dockerfile`, `docker-compose.yml`) ca să evităm detectarea automată pe hosting; pornește cu `docker compose -f .docker/docker-compose.yml up --build`.
