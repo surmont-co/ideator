@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.6 - 2025-12-25
+
+### Added
+- Comprehensive `.env.example` file with all required and optional environment variables documented in Romanian.
+- Docker-specific configuration documentation including `APP_PORT`, `WORKOS_REDIRECT_URI`, and `SESSION_COOKIE_DOMAIN` defaults.
+- Clear instructions for obtaining WorkOS credentials, Gemini API keys, and generating secure cookie passwords.
+- Localization settings documentation for EN/RO language support.
+
 ## 0.3.3 - 2024-12-26
 
 ### Changed
